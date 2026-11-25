@@ -1,0 +1,384 @@
+/* polish.css — final layer for consistency + mobile legibility (2026-11-25). */
+
+.compact-only{display:none}
+
+@media (max-width: 760px){
+  .compact-only{display:block}
+
+  /* Highlights: canvases are re-composed in JS for narrow screens; let them size naturally. */
+  .highlight-stage .hero-scene-area,
+  .highlight-stage[data-scene] .hero-scene-area{height:auto!important;aspect-ratio:auto!important;overflow:visible}
+  .highlight-stage .hero-panel{position:relative;inset:auto;height:auto}
+  .highlight-stage .hero-panel>canvas,
+  .wing-media>canvas{width:100%;height:auto!important;transform:none!important;object-fit:fill}
+  #scene-airfoils{padding-top:6px}
+  .scene-subset-note{margin:8px 0 0;text-align:center;font-size:13px;line-height:1.4;color:#6e6e73}
+
+  .wing-media{aspect-ratio:auto}
+  #wing-conditions{position:static;transform:none;display:block;margin:6px 0 0;text-align:center;font-size:13px;white-space:normal}
+  #wing-conditions .wing-condition-divider{display:inline}
+  .wing-case-chart{position:static;margin:14px auto 0;max-width:340px;width:100%}
+  .wing-case-chart svg{font-size:15px}
+}
+
+/* Web demo: give the desktop embed most of the viewport so less scrolling happens inside the frame. */
+@media (min-width: 761px){
+  .web-demo-live{height:clamp(600px, calc(100vh - 120px), 920px)}
+}
+
+/* ---------- Switch system ----------
+   Primary (scene-level): Airfoil/Wing, Transonic/Mars UAV — 40px segmented, left-aligned under the heading.
+   Secondary (in-chart): metric / seed / figure toggles — 32px segmented.            */
+.closer-cases,
+.ood-family-tabs.design-view-toggle,
+.design-task-switcher{
+  display:inline-flex;gap:4px;padding:4px;border:0;border-radius:99px;background:#ededf0;
+  position:static;left:auto;transform:none;margin:0;width:auto;
+}
+.closer-cases button,
+.ood-family-tabs.design-view-toggle button,
+.design-task-switcher [role="tab"]{
+  min-height:40px;min-width:96px;padding:8px 22px;border:0;border-radius:99px;
+  background:transparent;color:#45454b;font:500 15px/1.2 var(--sans);box-shadow:none;
+  transition:background .18s ease,color .18s ease,box-shadow .18s ease;
+}
+.closer-cases button[aria-selected="true"],
+.ood-family-tabs.design-view-toggle button[aria-selected="true"],
+.design-task-switcher [role="tab"][aria-selected="true"]{
+  background:#fff;color:var(--ink);box-shadow:0 2px 8px rgba(0,0,0,.08);
+}
+.closer-cases button[aria-selected="false"]:hover,
+.ood-family-tabs.design-view-toggle button[aria-selected="false"]:hover,
+.design-task-switcher [role="tab"][aria-selected="false"]:hover{background:transparent;color:var(--ink)}
+
+/* placement: directly under the section heading, left-aligned */
+.convergence-section .convergence-heading{flex-direction:column;align-items:flex-start;justify-content:flex-start}
+.closer-cases{margin-top:6px}
+.design-task-switcher{display:flex;width:max-content;margin:0 0 20px}
+.ood-family-tabs.design-view-toggle{margin-bottom:20px}
+
+/* secondary */
+.design-view-toggle:not(.ood-family-tabs),
+.design-seed-buttons,
+.design-slide-tabs{gap:2px;padding:3px;border:1px solid #e3e3e8;border-radius:99px;background:#f5f5f7}
+.design-view-toggle:not(.ood-family-tabs) button,
+.design-seed-buttons button,
+.design-slide-tabs [role="tab"]{min-height:32px;padding:5px 12px;border-radius:99px;font:500 13px/1.2 var(--sans)}
+.design-seed-buttons button{min-width:34px;padding-inline:8px;font-variant-numeric:tabular-nums}
+
+/* carousel: tabs are the only navigation; no arrows, no peeking neighbour card */
+.design-nav-arrows{display:none!important}
+.design-figure-track{--card-edge:0px;grid-template-columns:repeat(3,100%)!important}
+
+/* hover vs tap hints */
+.hint-coarse{display:none}
+@media (hover:none){.hint-fine{display:none}.hint-coarse{display:inline}}
+
+@media (max-width:760px){
+  .closer-cases,.ood-family-tabs.design-view-toggle,.design-task-switcher{display:flex;width:100%}
+  .closer-cases button,.ood-family-tabs.design-view-toggle button,.design-task-switcher [role="tab"]{flex:1;min-height:44px;min-width:0;padding-inline:10px}
+  .design-view-toggle:not(.ood-family-tabs) button,.design-seed-buttons button,.design-slide-tabs [role="tab"]{min-height:36px}
+  .design-seed-buttons button{min-width:40px}
+}
+
+/* ---------- Touch targets ---------- */
+.fn a{display:inline-block;padding:6px 4px;margin:-6px -4px}
+@media (max-width:760px){
+  label:has(> input[type="checkbox"]){min-height:36px;display:inline-flex;align-items:center;gap:6px}
+  input[type="checkbox"]{width:16px;height:16px}
+  .web-demo-start{font-size:15px;padding:11px 20px}
+}
+
+/* ---------- OOD benchmarks: geometry shift is the lead visual ---------- */
+.ood-section.section{
+  --ood-training-geometry: var(--ood-prediction);   /* blue: surrogate's trained range  */
+  --ood-benchmark-geometry: var(--ood-correction);  /* copper: what NK must handle      */
+}
+.ood-card-heading > span{font-size:14px}
+.ood-geometry{padding-bottom:24px;margin-bottom:24px}
+.ood-geo-hero{display:grid;grid-template-columns:minmax(0,1fr) minmax(200px,260px);gap:24px 40px;align-items:center}
+.ood-geo-visual{min-width:0}
+.ood-shape-pair{max-width:none;gap:28px}
+.ood-shape{height:clamp(96px,11vw,150px)}
+.ood-geometry[data-geometry-view="planform"] .ood-shape{height:clamp(120px,15vw,200px)}
+.ood-shape path{stroke-width:1;opacity:.22}
+.ood-shape path:last-child{stroke-width:1.8;opacity:1}
+.ood-shape-group figcaption{font-size:15px}
+.ood-geometry-distance{height:clamp(110px,10vw,140px);margin-top:14px}
+.ood-distance-caption{font-size:13px}
+.ood-geo-stat{display:grid;gap:6px;padding-left:32px;border-left:1px solid #ececf0}
+.ood-geo-stat .ood-beyond{font:600 clamp(52px,6vw,80px)/1 var(--display,var(--sans));letter-spacing:-.04em;color:var(--ood-benchmark-geometry)}
+.ood-beyond-label{font-size:17px;line-height:1.35;color:var(--ink)}
+.ood-beyond-count{font-size:13px;color:var(--ood-secondary)}
+
+/* results: numbers first, then the supporting chart */
+.ood-metrics{margin:4px 0 14px}
+.ood-time-metrics{margin:4px 0 14px}
+.ood-error-values,.ood-time-values,.ood-stat-value{font-size:clamp(22px,2.1vw,28px)}
+.ood-gain-badge{font-size:13px;padding:4px 10px}
+.ood-chart{height:clamp(170px,15vw,200px)}
+.ood-band-note{display:flex;align-items:center;gap:6px}
+.ood-band-note i{flex:none;width:15px;height:8px;border-radius:2px;background:#e8e8ed}
+
+@media (max-width:760px){
+  .ood-geo-hero{grid-template-columns:1fr;gap:18px}
+  .ood-geo-stat{padding:16px 0 0;border-left:0;border-top:1px solid #ececf0;text-align:left}
+  .ood-shape-pair{gap:12px}
+  .ood-shape{height:clamp(70px,22vw,110px)}
+  .ood-geo-stat .ood-beyond{font-size:56px}
+  .ood-beyond-label{font-size:16px}
+}
+
+/* ---------- Colour semantics: blue = surrogate, copper = NK, neutral gray = CFD ----------
+   (Highlights videos keep their baked-in legend colour until they are re-rendered.) */
+.convergence-section .cold-line{background:#565d67}
+.design-figure-track{mask-image:none!important;-webkit-mask-image:none!important}
+
+/* ---------- Side by side on phones: CFD vs Surrogate–Newton, surrogate-only as a footnote line ---------- */
+@media (max-width:760px){
+  .ccols-head{display:grid;grid-template-columns:1fr 1fr;gap:6px 16px;padding-bottom:12px}
+  .ccols-head > div:first-child{display:none}
+  .ccols-head h3{font-size:17px}
+  .ccols{grid-template-columns:1fr 1fr;gap:6px 16px}
+  .crow .ccols > div::before{content:none!important}
+  .crow .ccols > div:nth-child(1){order:3;grid-column:1/-1;display:block;margin-top:4px;font-size:13px;color:#6e6e73}
+  .crow .ccols > div:nth-child(1)::before{content:"Surrogate alone: "!important;font:600 12px/1.2 var(--sans);color:#6e6e73}
+  .crow .ccols > div:nth-child(1) b{font:500 13px/1.4 var(--sans);color:#45454b;letter-spacing:0}
+  .crow .ccols > div:nth-child(1) span{margin-left:4px}
+  .crow .ccols b{font-size:19px}
+  .crow{padding:14px 0}
+}
+
+/* Design carousel: single-chart slides fill the shared card height instead of floating in white space. */
+.design-result-figure .design-result-heading{margin-bottom:8px}
+.design-efficiency > .design-chart,
+.design-result-figure > .design-chart:only-of-type{flex:1 1 auto;min-height:clamp(300px,30vw,440px)}
+@media (max-width:760px){.design-efficiency > .design-chart{min-height:340px}}
+.text-button{min-width:40px;min-height:40px;display:inline-grid;place-items:center}
+.ood-extra-curves summary,.notes-section summary{min-height:36px;display:flex;align-items:center;gap:6px}
+.ood-extra-curves summary{display:list-item;padding-block:9px}
+.research button,.bibtex button,[data-copy]{min-height:34px}
+@media (max-width:760px){.ood-time-toggles label{min-height:36px;padding-inline:12px}}
+.highlights-scale-note{white-space:nowrap}
+.convergence-section .grey-dot{background:#565d67}
+
+/* Give the optimization objective and elapsed time equal weight. */
+.crow .ccols .compare-pair {
+  display: inline-flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0 .34em;
+  font-size: clamp(16px, 1.45vw, 21px);
+}
+
+.crow .ccols .compare-pair span { margin: 0; font: inherit; color: inherit; white-space: nowrap; }
+.compare-pair span + span::before { content: "·"; margin-right: .34em; opacity: .55; }
+.crow .ccols .ccol-split {
+  --compare-method-width: 66px;
+  --compare-method-gap: 8px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+}
+.ccol-split p {
+  margin: 0;
+  display: grid;
+  grid-template-columns: var(--compare-method-width) minmax(0, 1fr);
+  align-items: baseline;
+  gap: 2px var(--compare-method-gap);
+  line-height: 1.35;
+}
+.ccol-split em { font: 600 12px/1.2 var(--sans); font-style: normal; color: var(--copper); }
+.ccol-split p > span { grid-column: 2; }
+.ccol-split > .compare-verification { margin-left: calc(var(--compare-method-width) + var(--compare-method-gap)); }
+
+@media (max-width: 950px) {
+  .ccol-split p { grid-template-columns: 1fr; }
+  .ccol-split p > span { grid-column: 1; }
+  .ccol-split > .compare-verification { margin-left: 0; }
+}
+
+@media (max-width: 760px) {
+  .crow .ccols .compare-pair { font-size: clamp(13px, 3.65vw, 17px); }
+  .crow .ccols > div:first-child .compare-pair { display: inline; font-size: inherit; }
+  .crow .ccols > div:first-child .compare-pair span + span { margin-left: .34em; }
+}
+
+@media (max-width: 370px) {
+  .ccols .compare-pair span + span::before { content: none; }
+}
+
+/* ---------- Scene switchers live below their card, centred (same as Highlights) ---------- */
+.closer-cases,
+.ood-family-tabs.design-view-toggle,
+.design-task-switcher,
+.hero-tabs.hero-tabs-bottom{
+  display:grid!important;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);
+  width:max-content;max-width:100%;margin:22px auto 0!important;padding:4px;gap:4px;
+}
+.closer-cases button,.ood-family-tabs.design-view-toggle button,.design-task-switcher [role="tab"],
+.hero-tabs.hero-tabs-bottom button{min-width:112px;min-height:44px;padding:8px 20px;flex:none}
+.closer-cases-wrap{display:flex;justify-content:center}
+.convergence-section .convergence-heading{margin-bottom:0}
+@media (max-width:760px){
+  .closer-cases,.ood-family-tabs.design-view-toggle,.design-task-switcher,.hero-tabs.hero-tabs-bottom{width:min(100%,360px)!important;margin-top:16px!important}
+  .closer-cases button,.ood-family-tabs.design-view-toggle button,.design-task-switcher [role="tab"],
+  .hero-tabs.hero-tabs-bottom button{min-width:0;padding-inline:6px;font-size:15px;white-space:nowrap}
+}
+
+/* Closer look: both tabs use the same field area, plot and footer. */
+.convergence-section .convergence-hero {
+  --closer-columns: minmax(0, 1.14fr) minmax(0, 1fr);
+  --closer-field-height: clamp(300px, 26vw, 360px);
+  --closer-chart-height: var(--closer-field-height);
+}
+
+.convergence-section .closer-layout,
+.convergence-section .closer-foot {
+  display: grid;
+  grid-template-columns: var(--closer-columns);
+  gap: 12px 30px;
+}
+.convergence-section .closer-layout > * { min-width: 0; margin: 0; }
+.convergence-section .journey-fields,
+.convergence-section .closer-wing-field {
+  display: grid;
+  height: var(--closer-field-height);
+}
+.convergence-section .journey-fields {
+  grid-template: repeat(2, minmax(0, 1fr)) / minmax(0, 1fr);
+  gap: 10px;
+}
+.convergence-section .journey-field,
+.convergence-section .closer-wing-field {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  min-height: 0;
+}
+.convergence-section .journey-field > div,
+.convergence-section .closer-wing-view {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  aspect-ratio: auto;
+}
+.convergence-section .journey-field > div {
+  display: grid;
+  place-items: center;
+  container-type: size;
+  background: transparent;
+}
+.convergence-section .journey-field canvas {
+  width: min(100%, 244.44cqh);
+  height: auto;
+  mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent),
+              linear-gradient(transparent, #000 16%, #000 84%, transparent);
+  mask-composite: intersect;
+}
+.convergence-section .journey-field figcaption,
+.convergence-section .closer-wing-camera {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px 10px;
+  min-height: 28px;
+  margin: 0 0 5px;
+  padding: 0;
+  font-size: 14px;
+}
+.convergence-section .closer-wing-camera { justify-content: flex-end; }
+.closer-wing-rotate { display: inline-flex; align-items: center; gap: 8px; }
+#closer-wing-reset-view { min-height: 28px; }
+.convergence-section .closer-history {
+  display: block;
+  max-width: none;
+  margin: 0;
+  padding: 0;
+}
+.convergence-section .journey-history #journey-chart,
+.convergence-section #closer-wing-chart {
+  display: block;
+  width: 100%;
+  height: var(--closer-chart-height);
+  cursor: ew-resize;
+}
+#convergence .closer-history text {
+  fill: var(--ink);
+  font: 400 14px var(--sans);
+  letter-spacing: 0;
+}
+#convergence .closer-history .closer-speedup { font-weight: 600; }
+.convergence-section .closer-foot { align-items: center; min-height: 58px; margin-top: 12px; }
+.closer-scales { display: flex; justify-content: center; gap: 20px; }
+.closer-scales .field-colorbar { width: min(100%, 300px); margin: 0; }
+.convergence-section .closer-wing-scales {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  max-width: none;
+  margin: 0;
+}
+.closer-legend {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, min(100%, 184px));
+  align-items: center;
+  justify-content: center;
+  gap: 5px 20px;
+  font-size: 14px;
+  color: var(--ink);
+}
+.closer-legend > span { display: inline-flex; align-items: center; justify-content: center; gap: 7px; white-space: nowrap; }
+.closer-legend .legend-line { width: 20px; height: 3px; }
+.closer-legend strong { font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.convergence-section .journey-controls { margin-top: 12px; }
+.convergence-section .closer-wing-meta { max-width: none; min-height: 21px; }
+#wing-grid-note { text-align: center; white-space: nowrap; }
+
+@media (max-width: 760px) {
+  .convergence-section .convergence-hero {
+    --closer-columns: minmax(0, 1fr);
+    --closer-field-height: clamp(260px, 58vw, 330px);
+    --closer-chart-height: 252px;
+  }
+  /* Flatten the layout so hero is the flex container and we can order freely:
+     fields (1) → colorbar/legend (2) → chart (3) → controls (4) → meta (5) */
+  #convergence-player, .closer-wing-player {
+    display: flex;
+    flex-direction: column;
+  }
+  #convergence-player .journey-heading,
+  .closer-wing-player .journey-heading { order: 0; }
+  #convergence-player .closer-load,
+  .closer-wing-player .closer-load { order: 1; }
+  /* closer-layout becomes a transparent pass-through so its children join the flex flow */
+  #convergence-player .closer-layout,
+  .closer-wing-player .closer-layout { display: contents; }
+  .convergence-section .journey-fields,
+  .convergence-section .closer-wing-field { order: 2; }
+  #convergence-player .closer-foot,
+  .closer-wing-player .closer-foot {
+    order: 3;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: auto;
+    gap: 6px;
+    margin-top: 10px;
+  }
+  .convergence-section .closer-history { order: 4; margin-top: 10px; }
+  #convergence-player .journey-controls,
+  .closer-wing-player .journey-controls,
+  #convergence-player .closer-wing-controls { order: 5; }
+  #convergence-player .closer-wing-meta,
+  .closer-wing-player .closer-wing-meta { order: 6; }
+  .convergence-section .journey-field figcaption { flex-wrap: wrap; }
+  .convergence-section .journey-field figcaption > span:first-child { white-space: nowrap; }
+  .closer-legend { min-height: 36px; gap: 4px 14px; }
+  .convergence-section .closer-wing-meta {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    min-height: 42px;
+  }
+  #wing-grid-note { grid-area: 2 / 1 / 3 / -1; text-align: left; }
+  #journey-pace, #closer-wing-pace { grid-area: 1 / 2; }
+}

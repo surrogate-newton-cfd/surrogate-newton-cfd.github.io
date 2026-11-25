@@ -1,0 +1,358 @@
+.ood-section.section {
+  --ood-prediction: #52798d;
+  --ood-correction: #a66040;
+  --ood-cold: #565d67;
+  --ood-nearest: #55837e;
+  --ood-training-geometry: #6c7887;
+  --ood-benchmark-geometry: #458278;
+  --ood-secondary: #55555d;
+  --ood-detail-size: 13px;
+  padding-block: clamp(48px, 6vw, 86px) clamp(18px, 3vw, 42px);
+}
+
+.ood-heading {
+  margin-bottom: 18px;
+}
+
+.ood-heading h2 {
+  max-width: 930px;
+}
+
+.ood-family-tabs {
+  margin-bottom: 16px;
+}
+
+.ood-family-tabs.design-view-toggle button[aria-selected="true"] {
+  color: #fff;
+  background: var(--ink);
+}
+
+.ood-card {
+  min-width: 0;
+  padding: clamp(16px, 2.2vw, 30px);
+  border: 1px solid #e3e3e8;
+  border-radius: 24px;
+}
+
+.ood-card[hidden], .ood-time-legend span[hidden] {
+  display: none;
+}
+
+.ood-card-heading, .ood-chart-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+}
+
+.ood-card-heading {
+  margin-bottom: 17px;
+}
+
+.ood-card-heading h3 {
+  margin: 0;
+  font: 600 clamp(22px, 2.25vw, 28px)/1.2 var(--display);
+  letter-spacing: -.03em;
+}
+
+.ood-card-heading > span,
+.ood-iqr,
+.ood-cohort {
+  color: var(--ood-secondary);
+  font-size: var(--ood-detail-size);
+}
+
+.ood-chart-heading {
+  min-height: 34px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.ood-chart-heading h4 {
+  margin: 0;
+  font: 600 15px/1.3 var(--sans);
+}
+
+:is(.ood-metric-picker, .ood-geometry-picker).design-view-toggle {
+  display: inline-grid;
+  grid-template-columns: repeat(2, 1fr);
+}
+
+:is(.ood-metric-picker, .ood-geometry-picker).design-view-toggle button {
+  padding-inline: 9px;
+  font: 500 var(--ood-detail-size)/1.25 var(--sans);
+}
+
+.ood-chart {
+  display: block;
+  width: 100%;
+  height: clamp(184px, 18vw, 222px);
+}
+
+.ood-chart text {
+  fill: var(--ood-secondary);
+  font: var(--ood-detail-size) var(--sans);
+}
+
+.ood-chart .ood-axis-title {
+  fill: var(--ink);
+  font-size: 14px;
+}
+
+.ood-time {
+  border-top: 1px solid #ececf0;
+  padding-top: 17px;
+  margin-top: 20px;
+}
+
+.ood-geometry {
+  border-bottom: 1px solid #ececf0;
+  margin-bottom: 17px;
+  padding-bottom: 15px;
+}
+
+.ood-geometry .ood-chart-heading {
+  min-height: 36px;
+}
+
+.ood-shape-pair {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  max-width: 820px;
+  margin-inline: auto;
+}
+
+.ood-shape-group {
+  display: grid;
+  gap: 3px;
+  justify-items: center;
+  margin: 0;
+  color: var(--ood-training-geometry);
+}
+
+.ood-shape-group[data-cohort="benchmark"] {
+  color: var(--ood-benchmark-geometry);
+}
+
+.ood-shape {
+  width: 100%;
+  height: clamp(57px, 6.4vw, 87px);
+}
+
+.ood-geometry[data-geometry-view="planform"] .ood-shape {
+  height: clamp(86px, 13vw, 166px);
+}
+
+.ood-shape path {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: .9;
+  opacity: .26;
+  vector-effect: non-scaling-stroke;
+}
+
+.ood-shape path:last-child {
+  stroke-width: 1.3;
+  opacity: 1;
+}
+
+.ood-shape-group figcaption {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: var(--ood-detail-size);
+  font-weight: 600;
+}
+
+.ood-geometry-distance {
+  width: 100%;
+  height: 81px;
+  margin-top: 6px;
+}
+
+.ood-geometry-distance text, .ood-distance-caption {
+  fill: var(--ood-secondary);
+  color: var(--ood-secondary);
+  font: var(--ood-detail-size)/1.4 var(--sans);
+}
+
+.ood-distance-caption {
+  display: flex;
+  justify-content: space-between;
+  gap: 4px 10px;
+  margin: 3px 0 0;
+}
+
+.ood-distance-caption strong {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.ood-training {
+  appearance: none;
+  min-height: 34px;
+  padding: 4px 29px 4px 11px;
+  border: 1px solid #dedee4;
+  border-radius: 99px;
+  color: var(--ink);
+  background:
+    linear-gradient(45deg, transparent 50%, #505057 50%) right 15px center / 5px 5px no-repeat,
+    linear-gradient(135deg, #505057 50%, transparent 50%) right 10px center / 5px 5px no-repeat, #fff;
+  font: 500 var(--ood-detail-size)/1.25 var(--sans);
+  cursor: pointer;
+}
+
+.ood-legend, .ood-time-legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px 16px;
+  font-size: var(--ood-detail-size);
+  min-height: 24px;
+  margin-top: 8px;
+}
+
+.ood-legend label, .ood-time-legend span, .ood-iqr {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ood-legend label {
+  min-height: 24px;
+  cursor: pointer;
+}
+
+.ood-legend input {
+  height: 12px;
+  width: 12px;
+  margin: 0;
+  accent-color: var(--ink);
+}
+
+.ood-legend i, .ood-time-legend i {
+  width: 16px;
+  border-top: 2px solid var(--ood-correction);
+}
+
+.ood-legend [data-method="prediction"] i { border-top-color: var(--ood-prediction); }
+.ood-time-legend [data-method="cold"] i { border-top: 2px dashed var(--ood-cold); }
+.ood-time-legend [data-method="nearest"] i { border-top: 2px dashed var(--ood-nearest); }
+.ood-legend label:has(input:not(:checked)) { color: #696974; }
+
+.ood-iqr {
+  margin-top: 10px;
+}
+
+.ood-iqr i {
+  width: 15px;
+  height: 8px;
+  background: #e8e8ed;
+  border-radius: 2px;
+}
+
+.ood-metrics {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 10px 12px;
+  margin-top: 12px;
+}
+
+.ood-stat {
+  display: grid;
+  gap: 4px;
+}
+
+.ood-rate {
+  text-align: right;
+}
+
+.ood-metric-caption {
+  color: var(--ood-secondary);
+  font-size: var(--ood-detail-size);
+  line-height: 1.3;
+}
+
+.ood-error-values, .ood-time-values, .ood-stat-value {
+  font-size: clamp(17px, 1.65vw, 22px);
+  line-height: 1.2;
+  font-weight: 600;
+  letter-spacing: -.025em;
+  font-variant-numeric: tabular-nums;
+}
+
+.ood-error-values, .ood-time-values {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 3px 7px;
+}
+
+.ood-error-values strong, .ood-time-values strong { font-weight: inherit; }
+.ood-error-values strong:first-child { color: var(--ood-prediction); }
+.ood-time-values strong:first-child { color: var(--ood-cold); }
+.ood-error-values strong:last-child, .ood-time-values strong:last-child { color: var(--ood-correction); }
+.ood-error-values > span, .ood-time-values > span {
+  color: var(--ood-secondary);
+  font-weight: 400;
+}
+
+.ood-time-metrics {
+  margin-top: 16px;
+}
+
+.ood-cohort {
+  margin-top: 4px;
+}
+
+.ood-extra-curves {
+  margin-top: 14px;
+  font-size: var(--ood-detail-size);
+}
+
+.ood-extra-curves summary {
+  cursor: pointer;
+  padding-block: 4px;
+}
+
+@media (min-width: 900px) {
+  .ood-card {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: clamp(20px, 2.6vw, 36px);
+  }
+
+  .ood-card-heading, .ood-geometry { grid-column: 1 / -1; }
+
+  .ood-time {
+    border-top: 0;
+    border-left: 1px solid #ececf0;
+    padding: 0 0 0 clamp(20px, 2.6vw, 36px);
+    margin: 0;
+  }
+}
+
+@media (max-width: 490px) {
+  .ood-section.section { --ood-detail-size: 12px; }
+  .ood-metrics { grid-template-columns: 1fr; }
+
+  .ood-rate {
+    grid-template-columns: auto 1fr;
+    align-items: baseline;
+    column-gap: 8px;
+    text-align: left;
+  }
+
+  .ood-rate .ood-cohort {
+    grid-column: 1 / -1;
+    margin: 0;
+  }
+}
+
+@media (max-width: 375px) {
+  .ood-shape-pair { gap: 6px; }
+  .ood-geometry-picker.design-view-toggle button { padding-inline: 5px; }
+}

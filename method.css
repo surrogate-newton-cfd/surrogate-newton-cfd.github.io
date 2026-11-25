@@ -1,0 +1,219 @@
+.method-section.section {
+  --method-secondary: #6e6e73;
+  padding-block: clamp(64px, 8.2vw, 118px);
+  padding-bottom: clamp(36px, 4.8vw, 68px);
+  scroll-margin-top: -60px;
+  background: #fff;
+}
+
+.method-wrap {
+  max-width: 1270px;
+}
+
+.method-heading {
+  margin: 0 auto;
+  text-align: center;
+}
+
+.method-heading > p:first-child {
+  margin-bottom: 12px;
+  font: 600 clamp(17px, 1.55vw, 21px) / 1.24 var(--display);
+  letter-spacing: -.01em;
+}
+
+.method-heading h2 {
+  font: 600 clamp(38px, 5.55vw, 80px) / 1.05 var(--display);
+  letter-spacing: -.015em;
+  text-wrap: balance;
+}
+
+.method-heading > p:last-child {
+  max-width: 583px;
+  margin: 20px auto 0;
+  font-size: clamp(16px, 1.55vw, 21px);
+  line-height: 1.38;
+  color: var(--method-secondary);
+  text-wrap: balance;
+}
+
+.method-diagram {
+  --method-gap: clamp(62px, 7.3vw, 105px);
+  --method-arrow-color: #86868b;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--method-gap) minmax(0, 1fr) var(--method-gap) minmax(0, 1fr);
+  max-width: 960px;
+  margin: clamp(26px, 3.2vw, 46px) auto 0;
+}
+
+.method-diagram > :is(.method-node, .method-connection) {
+  grid-row: 1;
+}
+
+.method-node,
+.method-residual {
+  border: 1px solid #dddde2;
+  background: #fff;
+}
+
+.method-node {
+  min-height: 150px;
+  padding: 25px 17px;
+  border-radius: 20px;
+  transition: border-color .32s ease;
+}
+
+.method-mesh {
+  --method-accent: var(--ink);
+  --method-edge: #a1a1a9;
+}
+
+.method-prediction {
+  --method-accent: #3e647d;
+  --method-edge: #7296ae;
+}
+
+.method-correction {
+  --method-accent: #9a5430;
+  --method-edge: #bb876b;
+}
+
+.method-diagram h3 {
+  margin-bottom: 6px;
+  font: 600 24px / 1.18 var(--display);
+  letter-spacing: -.015em;
+}
+
+.method-diagram p {
+  font-size: 14px;
+  line-height: 1.48;
+  color: var(--method-secondary);
+}
+
+.method-node h3 {
+  transition: color .32s ease;
+}
+
+.method-node[data-lit] {
+  border-color: var(--method-edge);
+}
+
+.method-node[data-lit] h3 {
+  color: var(--method-accent);
+}
+
+.method-loop {
+  display: grid;
+  grid-area: 2 / 5;
+  grid-template-columns: 17px min(188px, calc(100% - 55px)) minmax(0, 1fr);
+  grid-template-rows: 40px 1fr 1fr;
+}
+
+.method-residual {
+  grid-area: 2 / 2 / 4 / 3;
+  padding: 12px 13px 13px;
+  border-radius: 14px;
+  transition: border-color .32s ease;
+}
+
+.method-residual h3 {
+  margin-bottom: 2px;
+  font-size: 17px;
+}
+
+.method-correction[data-lit] + .method-loop .method-residual {
+  border-color: #a1a1a9;
+}
+
+.method-loop .method-to-residual {
+  grid-area: 1 / 1 / 2 / -1;
+  place-self: center;
+  width: 29px;
+  transform: rotate(90deg);
+}
+
+.method-return-path {
+  position: relative;
+  grid-area: 1 / 3 / 3;
+  margin: 5px 12px 0 5px;
+  color: var(--method-arrow-color);
+  border: solid currentColor;
+  border-width: 0 1.5px 1.5px 0;
+  border-radius: 0 0 5px 0;
+}
+
+.method-return-path::before {
+  position: absolute;
+  top: 0;
+  right: -.75px;
+  transform: translateX(50%);
+  border-inline: 3.5px solid transparent;
+  border-bottom: 7px solid currentColor;
+  content: "";
+}
+
+.method-arrow {
+  position: relative;
+  display: block;
+  height: 1.5px;
+  color: var(--method-arrow-color);
+  background: currentColor;
+}
+
+.method-arrow::after {
+  position: absolute;
+  top: 50%;
+  right: 0;
+  transform: translateY(-50%);
+  border-block: 3.5px solid transparent;
+  border-left: 7px solid currentColor;
+  content: "";
+}
+
+.method-connection {
+  display: grid;
+  align-items: center;
+  padding-inline: 7px;
+}
+
+@media (max-width: 1070px) and (min-width: 901px) {
+  .method-diagram h3 { font-size: 22px; }
+  .method-residual h3 { font-size: 17px; }
+}
+
+@media (max-width: 900px) {
+  .method-section.section { scroll-margin-top: -30px; }
+  .method-wrap { width: calc(100% - 32px); }
+
+  .method-diagram {
+    grid-template-columns: minmax(0, 390px);
+    justify-content: center;
+  }
+
+  .method-diagram > :is(.method-node, .method-connection, .method-loop) {
+    grid-area: auto;
+  }
+
+  .method-node {
+    min-height: 0;
+    padding: 18px 22px;
+    border-radius: 16px;
+  }
+
+  .method-connection {
+    justify-items: center;
+    height: 33px;
+  }
+
+  .method-connection > .method-arrow {
+    width: 24px;
+    transform: rotate(90deg);
+  }
+
+  .method-loop {
+    grid-template-columns: 1fr min(188px, calc(100% - 48px)) 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .method-node, .method-node h3, .method-residual { transition: none; }
+}

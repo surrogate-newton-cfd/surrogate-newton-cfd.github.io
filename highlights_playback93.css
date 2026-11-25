@@ -1,0 +1,6 @@
+/* One shared header label; its position is identical across scenes and camera changes. */
+.highlight-stage{position:relative}
+.highlight-stage .highlight-playback-row,.highlight-stage[data-scene="2"] .highlight-playback-row{display:flex;position:absolute;top:100px;right:48px;z-index:3;height:auto;min-height:0;width:auto;max-width:none;padding:0;margin:0;pointer-events:none}
+.highlight-stage .highlight-playback{font:400 16px/1.3 var(--sans);color:#1d1d1f;gap:6px;visibility:visible}
+.highlight-stage .highlight-playback svg{width:20px;height:16px}
+@media(max-width:760px){.highlight-stage .highlight-playback-row,.highlight-stage[data-scene="2"] .highlight-playback-row{top:106px;right:22px}.highlight-stage .highlight-playback{font-size:12px}.highlight-stage .highlight-playback svg{width:16px;height:14px}}

@@ -1,0 +1,36 @@
+.field-colorbar {
+  width: min(100%, 340px);
+  margin: 13px auto 0;
+  padding-inline: 2px;
+  color: var(--ink, #1d1d1f);
+  text-align: center;
+  font: 400 13px/1.35 var(--sans, Inter, sans-serif);
+}
+
+.field-colorbar-title {
+  display: block;
+  margin-bottom: 5px;
+}
+
+.field-colorbar-gradient {
+  height: 9px;
+  border: 1px solid #1d1d1f24;
+  border-radius: 2px;
+}
+
+.field-colorbar-ticks {
+  position: relative;
+  height: 18px;
+  margin-top: 4px;
+  font-variant-numeric: tabular-nums;
+}
+
+.field-colorbar-ticks > span {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+
+.field-colorbar-ticks > span:first-child { transform: none; }
+.field-colorbar-ticks > span:last-child { transform: translateX(-100%); }

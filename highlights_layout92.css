@@ -1,0 +1,3 @@
+/* Wings uses one aligned metric/playback header inside the animation. */
+.highlight-stage[data-scene="2"] .highlight-playback-row{display:none}
+.highlight-stage[data-scene="2"] .hero-scene-area{height:auto;aspect-ratio:1600 / 810}

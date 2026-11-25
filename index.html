@@ -1,205 +1,961 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="Project page for Reliable and efficient steady CFD from surrogate predictions through Newton-Krylov correction.">
-    <meta name="theme-color" content="#ffffff">
-    <title>Surrogate-Newton CFD</title>
-    <link rel="canonical" href="https://surrogate-newton-cfd.github.io/">
-    <link rel="icon" href="data:,">
-    <link rel="stylesheet" href="./styles.css?v=20260812-type1">
-  </head>
-  <body>
-    <a class="skip-link" href="#main-content">Skip to content</a>
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Surrogate–Newton pairs full-field neural prediction with residual-controlled Newton–Krylov correction for reliable, fast steady CFD even out of distribution.">
+  <meta name="theme-color" content="#ffffff"><title>Surrogate–Newton</title>
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="style.css?v=plan-a-1">
+  <link rel="stylesheet" href="highlights_controls83.css?v=playback-93">
+  <link rel="stylesheet" href="highlights_layout84.css?v=playback-93">
+  <link rel="stylesheet" href="highlights_refine85.css?v=playback-93">
+  <link rel="stylesheet" href="highlights_refine87.css?v=playback-93">
+  <link rel="stylesheet" href="highlights_layout92.css?v=playback-93">
+  <link rel="stylesheet" href="highlights_playback93.css?v=playback-93">
+  <link rel="stylesheet" href="hero94.css?v=plan-a-1">
+  <link rel="stylesheet" href="web-demo.css?v=plan-a-1">
+  <link rel="stylesheet" href="field-display.css?v=cp1">
+  <link rel="stylesheet" href="method.css?v=plan-a-1">
+  <link rel="stylesheet" href="closer-look.css?v=shared-link">
+  <link rel="stylesheet" href="offline-ood.css?v=focused">
+  <link rel="stylesheet" href="mechanism.css?v=polish-1">
+  <link rel="stylesheet" href="aerodynamic-design.css?v=plan-a-1">
+  <link rel="stylesheet" href="editorial.css?v=continuous-sequence">
+  <link rel="stylesheet" href="polish.css?v=shared-convergence">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
 
-    <main id="main-content">
-      <header class="paper-header page-width">
-        <p class="venue">Tsinghua University · 2026</p>
-        <h1>Reliable and efficient steady CFD from surrogate predictions through Newton-Krylov correction</h1>
-
-        <p class="authors">
-          <a href="https://leimingcheng.github.io/" rel="noreferrer">Mingcheng Lei</a><sup>1</sup>,
-          <span>Weishao Tang</span><sup>1</sup>,
-          <span>Yufei Zhang</span><sup>1,2,*</sup>,
-          <span>Haixin Chen</span><sup>1</sup>
-        </p>
-        <p class="affiliations">
-          <span><sup>1</sup> School of Aerospace Engineering, Tsinghua University</span>
-          <span><sup>2</sup> State Key Laboratory of Advanced Space Propulsion, Tsinghua University</span>
-          <span><sup>*</sup> Corresponding author</span>
-        </p>
-
-        <nav class="resource-links" aria-label="Project resources">
-          <a href="https://arxiv.org/abs/2608.04400" rel="noreferrer"><span class="button-icon" aria-hidden="true">▤</span>Paper</a>
-          <a href="https://github.com/LeiMingcheng/surrogate-newton-cfd" rel="noreferrer"><span class="button-icon code-icon" aria-hidden="true">&lt;/&gt;</span>Code</a>
-          <a href="https://huggingface.co/xzztj/surrogate-newton-cfd-fsb-dit-airfoil-inference" rel="noreferrer"><span class="button-icon" aria-hidden="true">◈</span>Model</a>
-          <a href="#bibtex"><span class="button-icon" aria-hidden="true">❝</span>BibTeX</a>
-        </nav>
-        <a class="interactive-project-link" href="./demo/" rel="noreferrer">
-          <span class="interactive-project-icon" aria-hidden="true">▷</span>
-          <span class="interactive-project-copy">
-            <strong>Open the Interactive Project Demo</strong>
-            <small>Upload or modify an airfoil geometry and run the solver-coupled workflow.</small>
-          </span>
-          <span class="interactive-project-arrow" aria-hidden="true">↗</span>
-        </a>
-      </header>
-
-      <section class="teaser page-wide" aria-labelledby="teaser-caption">
-        <a class="figure-image-link" href="./assets/figures/fig1_workflow.png" aria-label="Open the full-resolution workflow figure as a PNG">
-          <img src="./assets/figures/fig1_workflow.png" alt="Comparison of standalone surrogate prediction, conventional cold-start CFD, and solver-coupled Surrogate-Newton CFD">
-        </a>
-        <p id="teaser-caption" class="lead-caption">
-          <strong>Surrogate-Newton CFD</strong> uses a learned full-field prediction to enter the convergence region of the target solver, then applies Newton-Krylov updates until the native residual satisfies the solver tolerance.
-        </p>
-      </section>
-
-      <section class="paper-section page-width" id="abstract">
-        <h2>Abstract</h2>
-        <p>
-          Neural surrogates can evaluate flow fields rapidly, but their reliability degrades under out-of-distribution geometries. We introduce a solver-coupled surrogate-Newton framework that treats a surrogate prediction as a high-quality initial state for Newton-Krylov correction. The learned model supplies global flow structure; the numerical solver supplies residual-based verification and terminal accuracy.
-        </p>
-        <p>
-          On an optimization-derived transonic airfoil benchmark, the framework reduces the median residual L<sub>2</sub> ratio by more than seven orders of magnitude while lowering field and aerodynamic errors. In supercritical-airfoil optimization it improves online reliability with a 15.5-fold generation-level speedup over CFD, and the same principle extends to three-dimensional flying-wing configurations.
-        </p>
-      </section>
-
-      <section class="paper-section page-width" id="method">
-        <h2>Method</h2>
-        <div class="method-intro">
-          <h3>Prediction supplies structure; the solver supplies acceptance.</h3>
-          <p>
-            Geometry and flow conditions are first mapped to a complete steady-flow state. That prediction is then injected into the target CFD discretization and corrected until its native nonlinear residual satisfies the prescribed tolerance.
-          </p>
+<header class="site-header">
+  <nav class="nav wrap" aria-label="Main navigation">
+    <a class="brand" href="#top"><svg viewBox="0 0 42 24" aria-hidden="true"><path d="M2 15C8 3 23 5 40 15C22 14 10 20 2 15Z" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M2 15H40" stroke="currentColor" stroke-width=".6"/></svg><span>Surrogate<span class="brand-dash">–</span>Newton</span></a>
+    <div class="nav-actions">
+      <div class="nav-explore">
+        <button class="nav-pill out" id="explore-btn" type="button" aria-expanded="false" aria-controls="explore-menu">Explore <svg viewBox="0 0 10 10" aria-hidden="true"><path d="M2 3.5 5 6.5 8 3.5" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        <div class="explore-menu" id="explore-menu" hidden>
+          <a href="#highlights">Highlights</a>
+          <a href="#demo">Web demo</a>
+          <a href="#method">How it works</a>
+          <a href="#convergence">Closer look</a>
+          <a href="#offline-ood">OOD benchmarks</a>
+          <a href="#design">Why OOD matters</a>
+          <a href="#design-results">Optimization results</a>
+          <a href="#compare">Side by side</a>
+          <a href="#mechanism">Why it works</a>
+          <a href="#faq">Questions</a>
+          <a href="#research">Paper &amp; citation</a>
         </div>
-        <div class="method-process" aria-label="Solver-coupled correction path">
-          <ol class="method-sequence">
-            <li><span class="step-index">01</span><strong>Predict</strong><small>Infer the full flow and turbulence state.</small></li>
-            <li><span class="step-index">02</span><strong>Evaluate</strong><small>Measure the native discrete residual.</small></li>
-            <li><span class="step-index">03</span><strong>Correct</strong><small>Apply Jacobian-free Newton–Krylov updates.</small></li>
-            <li><span class="step-index">04</span><strong>Accept</strong><small>Stop at the target solver tolerance.</small></li>
-          </ol>
-          <div class="method-formulation" aria-label="Method equations">
-            <p><span>Surrogate initialization</span><code>Û = S(G, θ)</code></p>
-            <p><span>Local correction</span><code>J(U<sup>k</sup>)ΔU = −R(U<sup>k</sup>)</code></p>
-            <p class="acceptance-rule"><span>Numerical acceptance</span><code>‖R(U<sub>NK</sub>)‖ ≤ ε</code></p>
+      </div>
+      <a class="nav-pill out hide-sm" href="https://arxiv.org/abs/2608.04400" target="_blank" rel="noreferrer">Paper</a>
+      <a class="nav-pill solid" href="#demo">Try demo</a>
+    </div>
+  </nav>
+</header>
+
+<main id="main">
+  <!-- 1. HERO -->
+  <section class="hero hero-opening" id="top" aria-labelledby="hero-title">
+    <div class="hero-copy wrap">
+      <p class="hero-project">Surrogate–Newton</p>
+      <h1 id="hero-title">Surrogate-accelerated CFD.<br>Fast and reliable out of distribution.</h1>
+      <p class="hero-lede">Initialize with a <strong class="hero-surrogate">surrogate</strong>.<br>Converge with <strong class="hero-newton">Newton–Krylov</strong> correction.</p>
+      <figure class="hero-flow" aria-label="NK correction along the RAE2822-to-ellipse sequence">
+        <figcaption class="hero-flow-caption">NK correction</figcaption>
+        <div class="hero-field-keys">
+          <div class="hero-field-key">
+            <span>C<sub>p</sub></span>
+            <span class="hero-field-scale" aria-label="Pressure coefficient from −2 to 1.2"><span>−2</span><i aria-hidden="true"></i><span>1.2</span></span>
+          </div>
+          <div class="hero-field-key">
+            <span>ΔC<sub>p</sub></span>
+            <span class="hero-field-scale hero-error-scale" aria-label="Signed pressure coefficient error from −0.05 to +0.05, white at zero"><span>−0.05</span><i aria-hidden="true"></i><span>+0.05</span></span>
           </div>
         </div>
-      </section>
-
-      <section class="paper-section page-wide" id="benchmark">
-        <div class="section-intro page-width inset">
-          <h2>Optimization-derived OOD benchmark</h2>
-          <p>
-            The evaluation set is built from intermediate airfoils visited by actual transonic optimization trajectories. Its geometric shift is measured explicitly in the 26-dimensional CST representation.
-          </p>
+        <div class="hero-flow-media">
+          <video id="hero-flow-video" muted playsinline loop preload="auto" hidden
+            src="assets/opening-nk-sequence.mp4" aria-hidden="true"></video>
+          <canvas id="hero-flow-canvas" width="1280" height="382" role="img"
+            aria-label="Pressure coefficient and signed error during NK correction"></canvas>
+          <div class="hero-flow-mse"><span aria-hidden="true">MSE</span><span class="visually-hidden">Pressure mean squared error</span> <strong id="hero-flow-mse">2.5 × 10<sup>−7</sup></strong></div>
         </div>
-
-        <div class="figure-grid benchmark-grid">
-          <figure class="figure-panel panel-tall">
-            <a class="figure-image-link" href="./assets/figures/fig2_a_dataset_geometries.png" aria-label="Open the full-resolution Figure 2a PNG"><img src="./assets/figures/fig2_a_dataset_geometries.png" alt="Laminar training, supercritical training, and optimization benchmark airfoil populations" loading="lazy"></a>
-            <figcaption><strong>(a) Geometry populations.</strong> Optimization generates shapes that differ systematically from the training families.</figcaption>
-          </figure>
-          <figure class="figure-panel">
-            <a class="figure-image-link" href="./assets/figures/fig2_b_geometry_ood_score_distribution.png" aria-label="Open the full-resolution Figure 2b PNG"><img src="./assets/figures/fig2_b_geometry_ood_score_distribution.png" alt="Nearest-neighbour distance distributions for training, validation, and benchmark geometries" loading="lazy"></a>
-            <figcaption><strong>(b) Nearest-neighbour distance.</strong> Most benchmark geometries lie beyond the training distribution's high-percentile region.</figcaption>
-          </figure>
+        <div class="hero-flow-footer">
+          <div class="hero-flow-selector">
+            <div class="hero-flow-rail" role="group" aria-label="Choose a geometry from RAE2822 to an ellipse">
+              <button type="button" data-case="0" aria-pressed="true"><svg viewBox="0 0 100 52" aria-hidden="true"><use href="assets/opening-geometry-profiles.svg#profile-0"></use></svg><span>RAE2822</span></button>
+              <button type="button" data-case="1" aria-pressed="false"><svg viewBox="0 0 100 52" aria-hidden="true"><use href="assets/opening-geometry-profiles.svg#profile-1"></use></svg><span class="visually-hidden">Intermediate geometry 1</span></button>
+              <button type="button" data-case="2" aria-pressed="false"><svg viewBox="0 0 100 52" aria-hidden="true"><use href="assets/opening-geometry-profiles.svg#profile-2"></use></svg><span class="visually-hidden">Intermediate geometry 2</span></button>
+              <button type="button" data-case="3" aria-pressed="false"><svg viewBox="0 0 100 52" aria-hidden="true"><use href="assets/opening-geometry-profiles.svg#profile-3"></use></svg><span>Ellipse</span></button>
+            </div>
+            <div class="hero-flow-axis" aria-label="From in distribution to out of distribution"><span>ID</span><i aria-hidden="true"></i><span>OOD</span></div>
+          </div>
+          <button type="button" id="hero-flow-play" class="hero-flow-play" data-action="play" aria-label="Play NK correction">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path data-icon="play" d="M9 5.5v13l10-6.5z" fill="currentColor"/>
+              <path data-icon="pause" d="M9 6v12m6-12v12" fill="none" stroke="currentColor" stroke-width="2.5"/>
+            </svg>
+          </button>
         </div>
-      </section>
-
-      <section class="paper-section page-wide" id="results">
-        <div class="section-intro page-width inset">
-          <h2>Solver consistency under geometric shift</h2>
-          <p>
-            Newton-Krylov correction reduces both the native residual and physical errors. The individual panels below separate aggregate benchmark statistics from representative pressure-field recovery.
-          </p>
+      </figure>
+      <div class="hero-anchor">
+        <div class="hero-anchor-ctas">
+          <a class="pill-btn solid" href="#demo">Try the web demo</a>
+          <a class="pill-btn out" href="https://arxiv.org/abs/2608.04400" target="_blank" rel="noreferrer">Read the paper ↗</a>
         </div>
+      </div>
+    </div>
+  </section>
 
-        <div class="results-stack">
-          <figure class="figure-panel result-row">
-            <div class="result-image"><a class="figure-image-link" href="./assets/figures/fig3_a_recovery_comparison.png" aria-label="Open the full-resolution Figure 3a PNG"><img src="./assets/figures/fig3_a_recovery_comparison.png" alt="Residual, field, lift, and drag error distributions before and after correction" loading="lazy"></a></div>
-            <figcaption>
-              <span class="figure-number">Result 1</span>
-              <strong>Residual and aerodynamic errors decrease together.</strong>
-              Terminal and staged correction shift the distributions of residual ratio, field MSE, lift error, and drag error toward the converged CFD reference.
+  <!-- 2. HIGHLIGHTS -->
+  <section class="highlights-band section" id="highlights" aria-labelledby="highlights-title">
+    <div class="hero-highlights wrap">
+      <div class="highlights-heading">
+        <div>
+          <h2 id="highlights-title">Get the highlights.</h2>
+        </div>
+      </div>
+      <div class="highlight-stage" id="highlight-player">
+        <p class="hero-panel-summary" id="hero-scene-caption">Fast convergence, even out of distribution.</p>
+        <div class="highlight-playback-row">
+          <span class="highlight-playback" id="highlight-playback"><svg viewBox="0 0 24 16" aria-hidden="true"><path d="M6 2 16 8 6 14Z" fill="currentColor"/></svg><span id="highlight-playback-value">Playback 2.5×</span></span>
+          <span id="highlight-mpi">8 MPI ranks</span>
+        </div>
+        <div class="overview-key" id="overview-key" data-statistics="false">
+          <div class="overview-initial-legend" id="overview-initial-legend"><span><i class="legend-line copper"></i>Surrogate + NK</span><span><i class="legend-line cold-line"></i>Cold-start CFD</span></div>
+          <div class="overview-statistics" id="overview-statistics" aria-hidden="true">
+            <div class="overview-key-methods">
+              <span class="overview-method"><span class="overview-method-label"><i class="legend-line copper"></i>Surrogate + NK</span><strong id="overview-median-nk" aria-hidden="true">1.76 s</strong></span>
+              <span class="overview-method"><span class="overview-method-label"><i class="legend-line cold-line"></i>Cold-start CFD</span><strong id="overview-median-cold" aria-hidden="true">10.10 s</strong></span>
+              <span class="overview-method overview-speedup" id="overview-speedup-metric" aria-hidden="true"><span class="overview-method-label">Speedup</span><strong id="overview-speedup">5.8×</strong></span>
+            </div>
+            <span class="overview-metric-title" id="overview-metric-title" aria-hidden="true" aria-label="Median convergence time across 200 paired OOD queries">Median times</span>
+          </div>
+        </div>
+        <div class="overview-key wing-overview-key" id="wing-key" data-statistics="true" hidden>
+          <div class="overview-statistics">
+            <div class="overview-key-methods">
+              <span class="overview-method"><span class="overview-method-label"><i class="legend-line copper"></i>Surrogate + NK</span><strong id="wing-median-nk">89 s</strong></span>
+              <span class="overview-method"><span class="overview-method-label"><i class="legend-line cold-line"></i>Cold-start CFD</span><strong id="wing-median-cold">472 s</strong></span>
+              <span class="overview-method overview-speedup"><span class="overview-method-label">Speedup</span><strong id="wing-median-speedup">5.2×</strong></span>
+            </div>
+            <span class="overview-metric-title" aria-label="Median convergence time across 60 paired wing cases">Median times</span>
+          </div>
+        </div>
+        <div class="hero-scene-area">
+          <div class="hero-panel" id="scene-overview" role="tabpanel" aria-labelledby="tab-overview"><video class="hero-video-decoder" aria-hidden="true" id="overview-video" width="1600" height="820" muted playsinline preload="auto" poster="assets/highlights/overview-rectangular-cp005-poster.webp" aria-label="Residual convergence surface across geometric out-of-distribution distance with paired pressure and error fields." aria-describedby="overview-timing"><source src="assets/highlights/overview-rectangular-cp005.mp4" type="video/mp4"></video><canvas id="overview-surface" width="1600" height="820" role="img" aria-label="Residual convergence surface across geometric out-of-distribution distance with paired pressure and error fields." aria-describedby="overview-timing"></canvas><span class="visually-hidden" id="overview-timing"></span></div>
+          <div class="hero-panel" id="scene-airfoils" role="tabpanel" aria-labelledby="tab-airfoils" hidden><video class="hero-video-decoder" aria-hidden="true" id="airfoil-matrix-video" width="1920" height="1080" muted playsinline preload="auto" poster="assets/highlights/airfoils-8mpi-cp005-poster.webp" aria-label="Thirty distinct OOD benchmark geometries with adjacent pressure and error fields converging in under 3 seconds each." aria-describedby="airfoil-matrix-description"><source src="assets/highlights/airfoils-8mpi-cp005.mp4" type="video/mp4"></video><canvas id="airfoil-matrix-surface" width="1920" height="1080" role="img" aria-label="Thirty distinct OOD benchmark geometries with adjacent pressure and error fields converging in under 3 seconds each." aria-describedby="airfoil-matrix-description"></canvas><span class="visually-hidden" id="airfoil-matrix-description"></span><p class="compact-only scene-subset-note">12 of 30 cases shown. Open on a wider screen for all 30.</p></div>
+          <div class="hero-panel" id="scene-wings" role="tabpanel" aria-labelledby="tab-wings" hidden>
+            <div class="wing-media">
+              <video class="hero-video-decoder" id="wing-video" width="1600" height="810" muted playsinline preload="auto" poster="assets/highlights/wing-paired-poster.webp" aria-hidden="true"><source src="assets/highlights/wing-paired.mp4" type="video/mp4"></video>
+              <canvas id="wing-canvas" width="1600" height="810" role="img" aria-label="One DLR-F6 semispan on 3,527,680 volume cells: surface pressure coefficient, local Mach sections and pressure-gradient contours evolving through NK correction"></canvas>
+              <span id="wing-conditions" hidden><span id="wing-mach-angle"></span> <span class="wing-condition-divider" aria-hidden="true">·</span> <span id="wing-reynolds"></span></span>
+              <figure class="wing-case-chart" aria-label="Displayed wing case convergence comparison">
+                <div class="wing-case-key"><span><i class="legend-line copper"></i>Surrogate + NK</span><span><i class="legend-line cold-line"></i>Cold-start CFD</span></div>
+                <svg id="wing-case-residual" viewBox="0 0 440 197" role="img" aria-label="Residual versus solver time for Surrogate + NK and cold-start CFD"></svg>
+              </figure>
+            </div>
+          </div>
+        </div>
+        <div class="hero-scene-caption highlights-controls" role="group" aria-label="Highlights playback">
+          <button id="highlight-play" class="circle-button" aria-label="Pause Overview" aria-pressed="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5h4v14H7zm6 0h4v14h-4z" fill="currentColor"/></svg></button>
+          <button id="highlight-replay" class="text-button" aria-label="Replay Overview"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8a8 8 0 1 1-1 8M5 3v5h5" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+          <input id="highlight-scrub" type="range" min="0" max="1000" value="0" aria-label="Review Overview animation">
+          <span id="highlight-position">0:00 / 0:25</span>
+        </div>
+      </div>
+      <p class="highlights-scale-note" id="highlights-scale-note">2D fields shown at 1:2 vertical scale.<sup class="fn"><a href="#fn3" aria-label="Footnote 3">3</a></sup></p>
+      <div class="hero-tabs hero-tabs-bottom" role="tablist" aria-label="Highlights scenes">
+        <button role="tab" id="tab-overview" aria-controls="scene-overview" aria-selected="true" data-scene="0">Overview</button>
+        <button role="tab" id="tab-airfoils" aria-controls="scene-airfoils" aria-selected="false" data-scene="1">Airfoil</button>
+        <button role="tab" id="tab-wings" aria-controls="scene-wings" aria-selected="false" data-scene="2">Wing</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. WEB DEMO -->
+  <section class="web-demo section" id="demo" aria-labelledby="demo-title">
+    <div class="wrap web-demo-wrap">
+      <div class="web-demo-heading">
+        <div>
+          <p class="web-demo-kicker">Web demo</p>
+          <h2 id="demo-title">Run your own airfoil case.</h2>
+          <p>Choose an airfoil and flow condition to run NK correction.</p>
+        </div>
+        <a class="web-demo-external" id="demo-link" href="https://surrogate-newton-cfd.github.io/demo/" target="_blank" rel="noopener">Open in a new tab ›</a>
+      </div>
+      <div class="web-demo-panel">
+        <div class="web-demo-poster" id="demo-poster">
+          <img src="assets/web-demo-cover.webp"
+            srcset="assets/web-demo-cover.webp 1400w, assets/web-demo-cover-2x.webp 2800w"
+            sizes="(max-width: 760px) calc(100vw - 26px), (max-width: 1272px) calc(100vw - 114px), 1158px"
+            width="1400" height="735" loading="lazy" alt="Pressure field around a transonic airfoil after NK correction">
+          <button class="web-demo-start" id="demo-start" type="button">Start demo</button>
+        </div>
+        <div class="web-demo-live" id="demo-live" hidden>
+          <div class="web-demo-toolbar"><button id="demo-stop" type="button">Stop demo</button></div>
+          <div class="web-demo-frame-host" id="demo-inline-host"></div>
+        </div>
+      </div>
+    </div>
+    <dialog class="web-demo-dialog" id="demo-dialog" aria-labelledby="demo-dialog-title">
+      <div class="web-demo-toolbar"><span id="demo-dialog-title">Web demo</span><button id="demo-close" type="button" autofocus>Close demo</button></div>
+      <div class="web-demo-frame-host" id="demo-dialog-host"></div>
+    </dialog>
+  </section>
+
+  <!-- 4. HOW IT WORKS -->
+  <section class="method-section section section-band" id="method" aria-labelledby="method-title">
+    <div class="wrap method-wrap">
+      <header class="method-heading">
+        <p>How it works</p>
+        <h2 id="method-title">Predict. Then correct.</h2>
+        <p>A surrogate predicts the initial flow field. <b>Newton–Krylov (NK) iterations</b> converge it to target tolerance.</p>
+      </header>
+      <div class="method-diagram" role="group" aria-label="Surrogate–Newton workflow">
+        <div class="method-node method-mesh">
+          <h3>Mesh generation</h3>
+          <p>Build the solver grid.</p>
+        </div>
+        <div class="method-connection" aria-hidden="true"><span class="method-arrow"></span></div>
+        <div class="method-node method-prediction">
+          <h3>Surrogate prediction</h3>
+          <p>Predict the initial flow field.</p>
+        </div>
+        <div class="method-connection" aria-hidden="true"><span class="method-arrow"></span></div>
+        <div class="method-node method-correction">
+          <h3>NK correction</h3>
+          <p>Apply Newton–Krylov updates.</p>
+        </div>
+        <div class="method-loop">
+          <span class="method-arrow method-to-residual" aria-hidden="true"></span>
+          <div class="method-residual">
+            <h3>Residual check</h3>
+            <p>Repeat until <i>r</i> ≤ ε.</p>
+          </div>
+          <span class="method-return-path" aria-hidden="true"></span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5. CLOSER LOOK -->
+  <section class="convergence-section section" id="convergence" aria-labelledby="convergence-title">
+    <header class="wrap convergence-heading">
+      <div class="convergence-heading-copy">
+        <h2 id="convergence-title">Take a closer look.</h2>
+        <p class="section-lede">Same mesh. Same tolerance. Convergence compared case by case.</p>
+      </div>    </header>
+    <div id="closer-airfoil" role="tabpanel" aria-labelledby="closer-airfoil-tab">
+      <div class="convergence-hero wrap" id="convergence-player">
+        <div class="journey-heading">
+          <select class="closer-case-select" id="closer-airfoil-case" aria-label="Airfoil case">
+            <option value="convergence-nlf416-m074">NLF(1)-0416</option>
+            <option value="convergence-oaf139">ONERA OAF139</option>
+            <option value="airfoil-benchmark-3567">OOD airfoil 3567</option>
+            <option value="airfoil-benchmark-2438">OOD airfoil 2438</option>
+          </select>
+          <span id="closer-airfoil-conditions"></span>
+        </div>
+        <p class="closer-load" id="closer-airfoil-status" role="status" hidden></p>
+        <div class="closer-layout">
+          <div class="journey-fields">
+            <figure class="journey-field">
+              <figcaption><span><i class="copper-dot"></i>Surrogate + NK</span></figcaption>
+              <div><canvas id="warm-frame" width="880" height="360" role="img" aria-label="Pressure coefficient field during NK correction from a surrogate prediction"></canvas></div>
+            </figure>
+            <figure class="journey-field">
+              <figcaption><span><i class="grey-dot"></i>Cold-start CFD</span></figcaption>
+              <div><canvas id="cold-frame" width="880" height="360" role="img" aria-label="Pressure coefficient field during cold-start CFD convergence"></canvas></div>
+            </figure>
+          </div>
+          <div class="journey-history closer-history"><svg id="journey-chart" viewBox="0 0 860 280" aria-label="Residual histories synchronized with the two pressure fields"></svg></div>
+        </div>
+        <div class="closer-foot">
+          <div class="closer-scales"><div id="journey-colorbar" class="field-colorbar" role="img" hidden><span class="field-colorbar-title"></span><div class="field-colorbar-gradient"></div><div class="field-colorbar-ticks"></div></div></div>
+          <div class="closer-legend" role="group" aria-label="Convergence times">
+            <span><i class="legend-line copper"></i>Surrogate + NK <strong data-convergence-time></strong></span>
+            <span><i class="legend-line cold-line"></i>Cold-start CFD <strong data-convergence-time></strong></span>
+          </div>
+        </div>
+        <div class="journey-controls"><button id="journey-play" disabled class="circle-button" aria-label="Pause convergence playback">Ⅱ</button><button id="journey-reset" disabled class="text-button" aria-label="Replay convergence">↺</button><input id="journey-scrub" disabled type="range" min="0" max="1000" value="0" aria-label="Playback position"><span id="journey-time"></span><span class="playback-label" id="journey-rate" hidden></span></div>
+        <div class="closer-wing-meta"><span id="journey-pace"></span></div>
+      </div>
+    </div>
+    <div id="closer-wing" role="tabpanel" aria-labelledby="closer-wing-tab" hidden>
+      <div class="convergence-hero wrap closer-wing-player">
+        <div class="journey-heading">
+          <select class="closer-case-select" id="closer-wing-case" aria-label="Wing case">
+            <option value="wing-dlrf6-sweep16">DLR-F6 · 16° sweep</option>
+            <option value="wing-dlrf6-sweep22">DLR-F6 · 22° sweep</option>
+            <option value="wing-vol2-0004-taper">Section-opt wing · 0.24 taper</option>
+            <option value="wing-vol2-0082-sweep35">Planform-opt wing · 35° sweep</option>
+            <option value="wing-crm-planform-0023">CRM planform benchmark</option>
+          </select>
+          <span id="closer-wing-conditions"></span>
+        </div>
+        <p class="closer-load" id="closer-wing-status" role="status" hidden></p>
+        <div class="closer-layout closer-wing-layout">
+          <figure class="closer-wing-field">
+            <figcaption class="closer-wing-camera">
+              <span class="closer-wing-rotate">Drag to rotate <button id="closer-wing-reset-view" type="button" disabled>Reset view</button></span>
             </figcaption>
+            <div class="closer-wing-view">
+              <canvas id="closer-wing-canvas" tabindex="0" aria-label="Interactive wing surface pressure, sectional Mach and pressure-gradient contours. Drag or use the arrow keys to rotate."></canvas>
+            </div>
           </figure>
-
-          <figure class="figure-panel result-row reverse">
-            <div class="result-image"><a class="figure-image-link" href="./assets/figures/fig3_c_ellipse_pressure_recovery.png" aria-label="Open the full-resolution Figure 3c PNG"><img src="./assets/figures/fig3_c_ellipse_pressure_recovery.png" alt="Pressure fields and absolute errors along a geometry sequence from RAE2822 to an out-of-distribution ellipse" loading="lazy"></a></div>
-            <figcaption>
-              <span class="figure-number">Result 2</span>
-              <strong>A representative geometry sequence into the OOD regime.</strong>
-              From the reference RAE2822 airfoil toward a strongly shifted ellipse geometry, Newton-Krylov correction recovers the converged pressure structure and sharply reduces shock-related error.
-            </figcaption>
-          </figure>
+          <div class="closer-wing-history closer-history">
+            <svg id="closer-wing-chart" role="img" aria-label="Wing residual histories" aria-describedby="wing-grid-note"></svg>
+          </div>
         </div>
-      </section>
+        <div class="closer-foot">
+          <div class="closer-scales closer-wing-scales">
+            <div class="field-colorbar" id="closer-wing-cp" role="img"><span class="field-colorbar-title"></span><div class="field-colorbar-gradient"></div><div class="field-colorbar-ticks"></div></div>
+            <div class="field-colorbar" id="closer-wing-mach" role="img"><span class="field-colorbar-title"></span><div class="field-colorbar-gradient"></div><div class="field-colorbar-ticks"></div></div>
+          </div>
+          <div class="closer-legend" role="group" aria-label="Convergence times">
+            <span id="closer-wing-warm"><i class="legend-line copper"></i>Surrogate + NK <strong data-convergence-time></strong></span>
+            <span id="closer-wing-cold"><i class="legend-line cold-line"></i>Cold-start CFD <strong data-convergence-time></strong></span>
+          </div>
+        </div>
+        <div class="journey-controls closer-wing-controls" role="group" aria-label="NK correction replay" hidden>
+          <button id="closer-wing-play" type="button" class="circle-button" aria-label="Play NK correction" disabled>▶</button>
+          <button id="closer-wing-replay" type="button" class="text-button" aria-label="Replay NK correction" disabled>↺</button>
+          <input id="closer-wing-scrub" type="range" min="0" max="1000" value="0" aria-label="Playback position" disabled>
+          <span id="closer-wing-time"></span>
+        </div>
+        <div class="closer-wing-meta"><span id="closer-wing-mesh"></span><span id="wing-grid-note">Dashed lines: cold-start multigrid transfers.<sup class="fn"><a href="#fn2" aria-label="Footnote 2">2</a></sup></span><span id="closer-wing-pace"></span></div>
+      </div>
+    </div>
+    <div class="wrap closer-cases-wrap">
+      <div class="closer-cases" role="tablist" aria-label="Convergence examples">
+        <button id="closer-airfoil-tab" type="button" role="tab" aria-selected="true" aria-controls="closer-airfoil">Airfoil</button>
+        <button id="closer-wing-tab" type="button" role="tab" aria-selected="false" aria-controls="closer-wing" tabindex="-1">Wing</button>
+      </div>
+    </div>
+    <div class="wrap compare-cta examples-demo"><a href="https://surrogate-newton-cfd.github.io/demo/" target="_blank" rel="noopener">Try your own case in the demo <span>›</span></a></div>
+  </section>
 
-      <section class="paper-section page-wide" id="optimization">
-        <div class="section-intro page-width inset">
-          <h2>Reliable online aerodynamic optimization</h2>
-          <p>
-            A fixed Newton-Krylov budget transfers the offline recovery gains to iterative design, where each generation evaluates candidate geometries outside the original training distribution.
+  <!-- 6. OFFLINE OOD BENCHMARKS -->
+  <section class="ood-section section section-band" id="offline-ood" aria-labelledby="ood-title">
+    <div class="wrap design-wrap">
+      <header class="design-heading ood-heading">
+        <p class="section-kicker">Out-of-distribution benchmarks</p>
+        <h2 id="ood-title">Accurate beyond the training set.</h2>
+        <p>Offline benchmarks on unseen airfoils and 3.5M-cell wings.</p>
+      </header>      <p id="ood-status" class="design-caption" role="status" hidden></p>
+      <div class="ood-results">
+        <article class="ood-card" id="ood-airfoils" role="tabpanel" aria-labelledby="ood-airfoils-tab" tabindex="0">
+          <header class="ood-card-heading"><h3>2D airfoils</h3><span>16,399 transonic cases</span></header>
+          <div class="ood-geometry">
+            <div class="ood-chart-heading"><h4>Geometry shift</h4></div>
+          </div>
+          <div class="ood-accuracy-block">
+            <div class="ood-chart-heading">
+              <h4>Accuracy distribution<sup class="fn"><a href="#fn4" aria-label="Footnote 4">4</a></sup></h4>
+              <div class="design-view-toggle ood-metric-picker" role="group" aria-label="Airfoil distribution metric">
+                <button type="button" data-metric="field_mse" aria-pressed="true">Field MSE</button>
+                <button type="button" data-metric="force_error" aria-pressed="false">Force error</button>
+              </div>
+            </div>
+            <div class="ood-metrics">
+              <div class="ood-stat">
+                <span class="ood-metric-caption">Median error · 16,399 cases</span>
+                <div class="ood-value-row"><div class="ood-error-values"></div><span class="ood-gain-badge ood-error-gain"></span></div>
+              </div>
+              <div class="ood-stat ood-rate">
+                <span class="ood-metric-caption">Convergence rate</span>
+                <strong class="ood-stat-value">96.75%</strong>
+                <p class="ood-cohort">15,866 / 16,399 · 12 s budget</p>
+              </div>
+            </div>
+
+            <svg class="ood-chart ood-density" role="img"></svg>
+            <div class="ood-legend ood-card-legend" role="group" aria-label="2D accuracy series">
+              <label data-method="prediction"><input type="checkbox" checked><i aria-hidden="true"></i>Surrogate</label>
+              <label data-method="correction"><input type="checkbox" checked><i aria-hidden="true"></i>Surrogate + NK</label>
+            </div>
+          </div>
+          <div class="ood-time">
+            <div class="ood-chart-heading">
+              <h4>Median convergence</h4>
+            </div>
+            <div class="ood-stat ood-time-metrics">
+              <span class="ood-metric-caption">Median time (r ≤ 10⁻⁸)</span>
+              <div class="ood-value-row"><div class="ood-time-values"></div><span class="ood-gain-badge ood-time-gain"></span></div>
+              <p class="ood-cohort ood-time-detail">200 paired cases</p>
+            </div>
+            <svg class="ood-chart ood-convergence-chart" role="img"></svg>
+            <div class="ood-time-legend" aria-label="2D convergence series">
+              <span data-series="full" data-method="correction"><i aria-hidden="true"></i>Surrogate + NK</span>
+              <span data-series="cold" data-method="cold"><i aria-hidden="true"></i>Cold-start CFD</span>
+            </div>
+            <p class="ood-subnote ood-band-note"><i aria-hidden="true"></i>Shading: 25th–75th percentiles.</p>
+            <details class="ood-extra-curves">
+              <summary>Training fractions and baselines</summary>
+              <div class="ood-time-toggles" id="ood-training-toggles" role="group" aria-label="2D convergence curves">
+                <label data-series="full"><input type="checkbox" value="full" checked><i aria-hidden="true"></i>100% data</label>
+                <label data-series="s10"><input type="checkbox" value="s10"><i aria-hidden="true"></i>10%</label>
+                <label data-series="s5"><input type="checkbox" value="s5"><i aria-hidden="true"></i>5%</label>
+                <label data-series="s3"><input type="checkbox" value="s3"><i aria-hidden="true"></i>3%</label>
+                <label data-series="s1"><input type="checkbox" value="s1"><i aria-hidden="true"></i>1%</label>
+                <label data-series="s0p1"><input type="checkbox" value="s0p1"><i aria-hidden="true"></i>0.1% data</label>
+                <span class="ood-toggle-sep" aria-hidden="true"></span>
+                <label data-series="cold"><input type="checkbox" value="cold" checked><i aria-hidden="true"></i>Cold-start CFD</label>
+                <label data-series="nearest"><input type="checkbox" value="nearest"><i aria-hidden="true"></i>1-NN + NK<sup class="fn"><a href="#fn5" aria-label="Footnote 5">5</a></sup></label>
+              </div>
+            </details>
+          </div>
+        </article>
+
+        <article class="ood-card" id="ood-wings" role="tabpanel" aria-labelledby="ood-wings-tab" tabindex="0" hidden>
+          <header class="ood-card-heading"><h3>3D wings</h3><span>1,085 cases · ~3.5M cells</span></header>
+          <div class="ood-geometry">
+            <div class="ood-chart-heading">
+              <h4>Geometry shift</h4>
+              <div class="design-view-toggle ood-geometry-picker" role="group" aria-label="Wing geometry metric">
+                <button type="button" data-geometry="section" aria-pressed="false">Section</button>
+                <button type="button" data-geometry="planform" aria-pressed="true">Planform</button>
+              </div>
+            </div>
+          </div>
+          <div class="ood-accuracy-block">
+            <div class="ood-chart-heading">
+              <h4>Accuracy distribution<sup class="fn"><a href="#fn4" aria-label="Footnote 4">4</a></sup></h4>
+              <div class="design-view-toggle ood-metric-picker" role="group" aria-label="Wing distribution metric">
+                <button type="button" data-metric="field_mse" aria-pressed="true" title="Field MSE is measured on nondimensional pressure for the wing benchmark.">Field MSE</button>
+                <button type="button" data-metric="force_error" aria-pressed="false">Force error</button>
+              </div>
+            </div>
+            <div class="ood-metrics">
+              <div class="ood-stat">
+                <span class="ood-metric-caption">Median error · 1,085 cases</span>
+                <div class="ood-value-row"><div class="ood-error-values"></div><span class="ood-gain-badge ood-error-gain"></span></div>
+              </div>
+              <div class="ood-stat ood-rate">
+                <span class="ood-metric-caption">Convergence rate</span>
+                <strong class="ood-stat-value">99.63%</strong>
+                <p class="ood-cohort">1,081 / 1,085 · r ≤ 10⁻⁶</p>
+              </div>
+            </div>
+
+            <svg class="ood-chart ood-density" role="img"></svg>
+            <div class="ood-legend ood-card-legend" role="group" aria-label="3D accuracy series">
+              <label data-method="prediction"><input type="checkbox" checked><i aria-hidden="true"></i>Surrogate</label>
+              <label data-method="correction"><input type="checkbox" checked><i aria-hidden="true"></i>Surrogate + NK</label>
+            </div>
+          </div>
+          <div class="ood-time">
+            <div class="ood-chart-heading"><h4>Median convergence</h4></div>
+            <div class="ood-stat ood-time-metrics">
+              <span class="ood-metric-caption">Median time (r ≤ 10⁻⁶)</span>
+              <div class="ood-value-row"><div class="ood-time-values"></div><span class="ood-gain-badge ood-time-gain"></span></div>
+              <p class="ood-cohort">60 paired cases</p>
+            </div>
+            <svg class="ood-chart ood-convergence-chart" role="img"></svg>
+            <div class="ood-time-legend" aria-label="3D convergence series">
+              <span data-method="correction"><i aria-hidden="true"></i>Surrogate + NK</span>
+              <span data-method="cold"><i aria-hidden="true"></i>Cold-start CFD</span>
+            </div>
+            <p class="ood-subnote ood-band-note"><i aria-hidden="true"></i>Shading: 25th–75th percentiles. Dashed verticals: CFD multigrid transfers.<sup class="fn"><a href="#fn2" aria-label="Footnote 2">2</a></sup></p>
+          </div>
+        </article>
+      </div>
+      <div class="design-view-toggle ood-family-tabs" role="tablist" aria-label="OOD benchmark geometry">
+        <button type="button" id="ood-airfoils-tab" role="tab" aria-selected="true" aria-controls="ood-airfoils">Airfoil</button>
+        <button type="button" id="ood-wings-tab" role="tab" aria-selected="false" aria-controls="ood-wings" tabindex="-1">Wing</button>
+      </div>
+    </div>
+    <template id="ood-geometry-template">
+      <div class="ood-geo-hero">
+        <div class="ood-geo-visual">
+          <div class="ood-shape-pair">
+            <figure class="ood-shape-group" data-cohort="training">
+              <svg class="ood-shape" viewBox="0 0 200 74" role="img"></svg>
+              <figcaption>Training set</figcaption>
+            </figure>
+            <figure class="ood-shape-group" data-cohort="benchmark">
+              <svg class="ood-shape" viewBox="0 0 200 74" role="img"></svg>
+              <figcaption>Benchmark</figcaption>
+            </figure>
+          </div>
+          <svg class="ood-geometry-distance" role="img"></svg>
+          <p class="ood-distance-caption">
+            <span>OOD distance, <i>d</i><sub>5</sub>*<sup class="fn"><a href="#fn3" aria-label="Footnote 3">3</a></sup> (log scale)</span>
+            <span>1 = training P99</span>
           </p>
         </div>
-
-        <div class="figure-grid optimization-grid">
-          <figure class="figure-panel">
-            <a class="figure-image-link" href="./assets/figures/fig5_a_optimization_curves_2x2_nk.png" aria-label="Open the full-resolution Figure 5a PNG"><img src="./assets/figures/fig5_a_optimization_curves_2x2_nk.png" alt="Optimization trajectories for RAE2822 and OAT15A with surrogate-only and surrogate-Newton evaluation" loading="lazy"></a>
-            <figcaption><strong>(a) Optimization histories.</strong> Correction brings the online estimate closer to converged CFD verification for both design tasks.</figcaption>
-          </figure>
+        <div class="ood-geo-stat">
+          <strong class="ood-beyond"></strong>
+          <span class="ood-beyond-label">of benchmark geometries lie beyond the training P99</span>
+          <small class="ood-beyond-count"></small>
         </div>
-      </section>
+      </div>
+    </template>
+  </section>
 
-      <section class="paper-section page-wide" id="three-dimensional">
-        <div class="section-intro page-width inset">
-          <h2>Extension to three-dimensional wings</h2>
-          <p>
-            We further evaluate the same coupling principle on flying-wing configurations with planforms deliberately shifted beyond the training distribution. Full-wing surface fields show the recovered three-dimensional structure, while spanwise sections expose the corresponding pressure-field correction in detail.
-          </p>
+  <!-- 7. WHY OOD MATTERS IN DESIGN -->
+  <section class="design-section section section-band" id="design" aria-labelledby="design-title">
+    <div class="wrap design-wrap">
+      <header class="design-heading">
+        <p class="section-kicker">Aerodynamic design</p>
+        <h2 id="design-title">Why OOD matters in design.</h2>
+        <p>Search must evaluate <b>intermediate candidates far beyond the training set</b> — farther than the final design.</p>
+      </header>
+
+      <p class="design-caption design-load-status" role="status" hidden></p>
+      <figure class="design-panel" id="design-history" aria-labelledby="design-history-title">
+        <header class="design-panel-heading">
+          <div>
+            <h3 id="design-history-title">RAE2822 optimization history</h3>
+            <p>Drag minimization · Ma 0.71–0.76 · C<sub>L</sub> = 0.824</p>
+          </div>
+        </header>
+        <div class="design-figure-body">
+          <div class="design-plot-column">
+            <div class="design-history-measure">
+              <div class="design-view-toggle" id="design-history-view" role="group" aria-label="Optimization history metric">
+                <button type="button" data-metric="distance" aria-pressed="true">OOD distance</button>
+                <button type="button" data-metric="cdAvg" aria-pressed="false">Mean drag</button>
+              </div>
+            </div>
+            <svg class="design-chart" id="design-history-chart" aria-label="Airfoil OOD distance by generation" aria-describedby="design-distance-note" role="slider" tabindex="0"></svg>
+            <div class="design-legend" id="design-history-legend" role="group" aria-label="Optimization history series"></div>
+          </div>
+          <div class="design-inspector">
+            <div class="design-selected">
+              <span id="design-selected-role">Evaluated candidate</span>
+              <div class="design-selected-values">
+                <div><strong id="design-selected-distance"></strong><span>OOD distance</span></div>
+                <div><strong id="design-selected-drag"></strong><span>Mean C<sub>D</sub> (CFD)<sup class="fn"><a href="#fn7" aria-label="Footnote 7">7</a></sup></span></div>
+              </div>
+            </div>
+            <svg class="design-foil" viewBox="-38 -220 1076 520" role="img" aria-label="Selected airfoil overlaid on RAE2822">
+              <path id="design-baseline-path" class="design-baseline-path" data-series="rae2822"/>
+              <path id="design-selected-path" class="design-selected-path" data-series="selected-profile"/>
+            </svg>
+            <div class="design-legend design-foil-legend" id="design-history-profile-legend" role="group" aria-label="Airfoil outlines"></div>
+            <div class="design-generation">
+              <label for="design-generation">Generation <output id="design-generation-value" for="design-generation"></output></label>
+              <input id="design-generation" type="range" min="0" max="50" value="23">
+            </div>
+          </div>
         </div>
-        <div class="three-dimensional-grid">
-          <figure class="figure-panel">
-            <a class="figure-image-link" href="./assets/figures/fig6_a_geometry_ood.png" aria-label="Open the full-resolution Figure 6a PNG"><img src="./assets/figures/fig6_a_geometry_ood.png" alt="Training, validation, and out-of-distribution flying-wing planform examples and distance distributions" loading="lazy"></a>
-            <figcaption><strong>(a) Controlled planform shift.</strong> Five OOD groups move systematically beyond the training and validation planform support.</figcaption>
-          </figure>
-          <figure class="figure-panel">
-            <a class="figure-image-link" href="./assets/figures/fig6_c_surface_cp_recovery.png" aria-label="Open the full-resolution Figure 6c PNG"><img src="./assets/figures/fig6_c_surface_cp_recovery.png" alt="Full flying-wing surface pressure comparison and errors for CFD, surrogate prediction, and Newton-Krylov correction" loading="lazy"></a>
-            <figcaption><strong>(c) Three-dimensional surface recovery.</strong> Full-wing surface pressure maps show that NK15 restores the converged spatial structure and strongly suppresses the surrogate error.</figcaption>
-          </figure>
-          <figure class="figure-panel">
-            <a class="figure-image-link" href="./assets/figures/fig6_d_pressure_flow_recovery.png" aria-label="Open the full-resolution Figure 6d PNG"><img src="./assets/figures/fig6_d_pressure_flow_recovery.png" alt="Three flying-wing sectional pressure fields comparing CFD, surrogate prediction, Newton-Krylov correction, and their errors" loading="lazy"></a>
-            <figcaption><strong>(d) Spanwise pressure-field recovery.</strong> At three wing sections, NK15 reduces the surrogate pressure-field error and recovers the converged CFD structure.</figcaption>
-          </figure>
+        <figcaption class="design-caption" id="design-distance-note"><b><span class="hint-fine">Hover</span><span class="hint-coarse">Tap</span> any point</b> to inspect its airfoil. Distance 1 = training P99.<sup class="fn"><a href="#fn3" aria-label="Footnote 3">3</a></sup></figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- 8. OPTIMIZATION RESULTS -->
+  <section class="design-section section design-results" id="design-results" aria-labelledby="design-results-title">
+    <div class="wrap design-wrap">
+      <header class="design-heading">
+        <p class="section-kicker">Design optimization</p>
+        <h2 id="design-results-title">Faster search. Verified designs.</h2>
+        <p>Two aerodynamic design tasks comparing search efficiency and independently CFD-verified performance.<sup class="fn"><a href="#fn7" aria-label="Footnote 7">7</a></sup></p>
+      </header>      <details class="design-modes-drawer">
+        <summary><span>Optimization modes &amp; Top-<i>K</i> screening</span><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></summary>
+        <div class="design-modes-grid">
+          <div><strong>Surrogate</strong><p>Standalone surrogate evaluation throughout search.</p></div>
+          <div><strong>Top-<i>K</i> NK (Top-4 / Top-12)</strong><p>Surrogate ranks each generation; NK corrects only the top <i>K</i> candidates.</p></div>
+          <div><strong>Full NK</strong><p>NK correction applied to every evaluated candidate.</p></div>
+          <div><strong>CFD</strong><p>Cold-start CFD baseline. All final designs are independently verified by CFD.</p></div>
         </div>
-      </section>
+      </details>
+      <p class="design-caption design-load-status" role="status" hidden></p>
 
-      <section class="paper-section page-width availability" id="availability">
-        <h2>Code and interactive system</h2>
-        <p>
-          The public repository contains the static project page, demo application, scheduling layer, tests, and deployment documentation. The compute-backed interactive interface runs independently on the project server.
-        </p>
-        <p><a class="text-link" href="./demo/" rel="noreferrer">Open the interactive demo →</a></p>
-      </section>
+      <div class="design-task-panels">
+        <!-- Task 1: Transonic -->
+        <article class="design-task-block" id="design-task-transonic" data-task="transonic" role="tabpanel" aria-labelledby="design-tab-transonic">
+          <div class="design-task-description">
+            <div>
+              <h3 id="design-transonic-heading">Multipoint drag minimization</h3>
+              <p class="design-task-meta">NACA 0012 start · Ma 0.724–0.744 · C<sub>L</sub> = 0.824 · Full NK matches CFD drag in <b>6.7× less time</b>.</p>
+            </div>
+            <div class="design-seed">
+              <span>Seed</span>
+              <div class="design-seed-buttons" data-role="seed-picker" role="group" aria-label="Transonic optimization seed"></div>
+            </div>
+          </div>
+          <div class="design-view-bar">
+            <div class="design-slide-tabs" data-role="slide-tabs" role="tablist" aria-label="Transonic figures">
+              <button type="button" role="tab" aria-selected="true" data-slide="0">Efficiency</button>
+              <button type="button" role="tab" aria-selected="false" data-slide="1">Final airfoils</button>
+              <button type="button" role="tab" aria-selected="false" data-slide="2">C<sub>p</sub> &amp; drag</button>
+            </div>
+            <div class="design-nav-arrows">
+              <button type="button" data-role="slide-prev" aria-label="Previous transonic figure" disabled><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m14 6-6 6 6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+              <button type="button" data-role="slide-next" aria-label="Next transonic figure" disabled><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m10 6 6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+            </div>
+          </div>
+          <div class="design-carousel" role="region" aria-roledescription="carousel" aria-label="Transonic optimization figures">
+            <div class="design-figure-track" data-role="track" tabindex="0" aria-label="Transonic optimization figures">
+              <figure class="design-result-figure design-efficiency" role="group" aria-roledescription="slide" aria-label="Efficiency, 1 of 3">
+                <div class="design-result-heading">
+                  <h4>Efficiency</h4>
+                  <p class="design-speed-callout"><strong data-role="top4-speedup">17.3×</strong><span>faster with Top‑4</span></p>
+                </div>
+                <svg class="design-chart design-cost-chart design-pick-chart" data-role="cost-chart" role="group" tabindex="0"></svg>
+                <div class="design-legend" data-role="cost-legend" role="group" aria-label="Transonic optimization methods"></div>
+              </figure>
+              <figure class="design-result-figure" role="group" aria-roledescription="slide" aria-label="Final airfoils, 2 of 3">
+                <div class="design-result-heading">
+                  <h4>Final airfoils</h4>
+                </div>
+                <svg class="design-response-foils" data-role="foil-chart" role="img"></svg>
+                <figcaption>
+                  <div class="design-legend design-result-legend" data-role="foil-legend" role="group" aria-label="Transonic airfoil outlines"></div>
+                </figcaption>
+              </figure>
+              <figure class="design-result-figure design-performance" role="group" aria-roledescription="slide" aria-label="Surface pressure and drag, 3 of 3">
+                <div class="design-result-heading"><h4>Surface pressure and drag</h4></div>
+                <div class="design-transonic-metrics">
+                  <div class="design-cp-row">
+                    <div><h5>Ma 0.724</h5><svg data-cp=".724" class="design-chart" role="img" aria-label="Surface pressure at Mach 0.724"></svg></div>
+                    <div><h5>Ma 0.734</h5><svg data-cp=".734" class="design-chart" role="img" aria-label="Surface pressure at Mach 0.734"></svg></div>
+                    <div><h5>Ma 0.744</h5><svg data-cp=".744" class="design-chart" role="img" aria-label="Surface pressure at Mach 0.744"></svg></div>
+                  </div>
+                  <div class="design-drag-row"><h5>Drag response</h5><svg data-role="drag-chart" class="design-chart design-pick-chart" role="group" tabindex="-1" aria-label="Drag across the three optimization Mach numbers"></svg></div>
+                </div>
+                <figcaption class="design-performance-caption">
+                  <div class="design-legend design-result-legend" data-role="metric-legend" role="group" aria-label="Transonic methods"></div>
+                  <div class="design-legend design-stage-legend" data-role="stage-legend" role="group" aria-label="Evaluation stages"></div>
+                </figcaption>
+              </figure>
+            </div>
+          </div>
+        </article>
 
-      <section class="paper-section page-width" id="bibtex">
-        <h2>BibTeX</h2>
-        <pre><code>@article{lei2026surrogate_newton,
-  title   = {Reliable and efficient steady CFD from surrogate predictions
-             through Newton--Krylov correction},
-  author  = {Lei, Mingcheng and Tang, Weishao and Zhang, Yufei and Chen, Haixin},
+        <!-- Task 2: Mars UAV -->
+        <article class="design-task-block" id="design-task-mars" data-task="mars" role="tabpanel" aria-labelledby="design-tab-mars" hidden>
+          <div class="design-task-description">
+            <div>
+              <h3 id="design-mars-heading">Mars UAV lift-to-drag maximization</h3>
+              <p class="design-task-meta">Extreme OOD · Ma 0.60 · Re 20,000 · Surrogate fails verification in <b>2 / 6 runs</b>; Surrogate–Newton passes <b>all 6</b>.</p>
+            </div>
+            <div class="design-seed">
+              <span>Seed</span>
+              <div class="design-seed-buttons" data-role="seed-picker" role="group" aria-label="Mars UAV optimization seed"></div>
+            </div>
+          </div>
+          <div class="design-view-bar">
+            <div class="design-slide-tabs" data-role="slide-tabs" role="tablist" aria-label="Mars UAV figures">
+              <button type="button" role="tab" aria-selected="true" data-slide="0">Efficiency</button>
+              <button type="button" role="tab" aria-selected="false" data-slide="1">Final airfoils</button>
+              <button type="button" role="tab" aria-selected="false" data-slide="2">L/D curve</button>
+            </div>
+            <div class="design-nav-arrows">
+              <button type="button" data-role="slide-prev" aria-label="Previous Mars UAV figure" disabled><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m14 6-6 6 6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+              <button type="button" data-role="slide-next" aria-label="Next Mars UAV figure" disabled><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m10 6 6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+            </div>
+          </div>
+          <div class="design-carousel" role="region" aria-roledescription="carousel" aria-label="Mars UAV optimization figures">
+            <div class="design-figure-track" data-role="track" tabindex="0" aria-label="Mars UAV optimization figures">
+              <figure class="design-result-figure design-efficiency" role="group" aria-roledescription="slide" aria-label="Efficiency, 1 of 3">
+                <div class="design-result-heading">
+                  <h4>Efficiency</h4>
+                  <p class="design-speed-callout"><strong data-role="top4-speedup">5.5×</strong><span>faster with Top‑4</span></p>
+                </div>
+                <svg class="design-chart design-cost-chart design-pick-chart" data-role="cost-chart" role="group" tabindex="0"></svg>
+                <div class="design-legend" data-role="cost-legend" role="group" aria-label="Mars UAV optimization methods"></div>
+              </figure>
+              <figure class="design-result-figure" role="group" aria-roledescription="slide" aria-label="Final airfoils, 2 of 3">
+                <div class="design-result-heading">
+                  <h4>Final airfoils</h4>
+                </div>
+                <svg class="design-response-foils" data-role="foil-chart" role="img"></svg>
+                <figcaption>
+                  <div class="design-legend design-result-legend" data-role="foil-legend" role="group" aria-label="Mars UAV airfoil outlines"></div>
+                </figcaption>
+              </figure>
+              <figure class="design-result-figure design-performance" role="group" aria-roledescription="slide" aria-label="Lift-to-drag response, 3 of 3">
+                <div class="design-result-heading"><h4>Lift-to-drag response</h4></div>
+                <svg class="design-chart design-response-chart design-pick-chart" data-role="polar-chart" role="group" tabindex="-1" aria-label="CFD-verified lift-to-drag curves"></svg>
+                <figcaption class="design-performance-caption">
+                  <div class="design-legend design-result-legend" data-role="metric-legend" role="group" aria-label="Mars UAV methods"></div>
+                </figcaption>
+              </figure>
+            </div>
+          </div>
+        </article>
+      </div>
+
+      <div class="design-task-switcher" role="tablist" aria-label="Optimization tasks">
+        <button type="button" id="design-tab-transonic" role="tab" aria-selected="true" aria-controls="design-task-transonic" data-task-tab="transonic">Transonic</button>
+        <button type="button" id="design-tab-mars" role="tab" aria-selected="false" aria-controls="design-task-mars" data-task-tab="mars" tabindex="-1">Mars UAV</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 9. SIDE BY SIDE -->
+  <section class="compare-section section section-band" id="compare" aria-labelledby="compare-title">
+    <div class="wrap design-wrap">
+      <header class="design-heading">
+        <h2 id="compare-title">Side by side.</h2>
+      </header>
+      <div class="ctable">
+        <div class="ccols ccols-head">
+          <div><h3>Standalone surrogate</h3><p>Prediction only</p></div>
+          <div><h3>Cold-start CFD</h3><p>Uniform / multigrid RANS</p></div>
+          <div class="ccol-accent"><h3>Surrogate–Newton</h3><p>Prediction + NK</p></div>
+        </div>
+        <div class="crow">
+          <h4>Evaluation mechanism</h4>
+          <div class="ccols">
+            <div>Standalone surrogate prediction</div>
+            <div>Iterative solver from uniform flow</div>
+            <div class="ccol-accent">Full-field prediction + residual-controlled NK</div>
+          </div>
+        </div>
+        <div class="crow">
+          <h4>2D OOD field MSE (16,399 cases)</h4>
+          <div class="ccols">
+            <div><b>2.5 × 10⁻⁵</b><span>unconverged</span></div>
+            <div><b>Reference</b><span>converged RANS</span></div>
+            <div class="ccol-accent"><b>9.8 × 10⁻¹²</b><span>&gt;10⁶× lower</span></div>
+          </div>
+        </div>
+        <div class="crow">
+          <h4>2D convergence time (r ≤ 10⁻⁸)<sup class="fn"><a href="#fn1" aria-label="Footnote 1">1</a></sup></h4>
+          <div class="ccols">
+            <div><b>—</b><span>no convergence (≈0.04 s inference)</span></div>
+            <div><b>10.10 s</b><span>200 paired cases</span></div>
+            <div class="ccol-accent"><b>1.76 s</b><span>5.8× faster · 96.75% converged</span></div>
+          </div>
+        </div>
+        <div class="crow">
+          <h4>3D wing time (~3.5M cells, r ≤ 10⁻⁶)<sup class="fn"><a href="#fn2" aria-label="Footnote 2">2</a></sup></h4>
+          <div class="ccols">
+            <div><b>—</b><span>no convergence</span></div>
+            <div><b>472 s</b><span>multigrid</span></div>
+            <div class="ccol-accent"><b>89 s</b><span>5.2× faster · 99.63% converged</span></div>
+          </div>
+        </div>
+        <div class="crow">
+          <h4>Transonic drag optimization · verified mean drag, lower is better<sup class="fn"><a href="#fn7" aria-label="Footnote 7">7</a></sup></h4>
+          <div class="ccols">
+            <div><b class="compare-pair"><span>137.3 counts</span><span>0.37 h</span></b></div>
+            <div><b class="compare-pair"><span>123.7 counts</span><span>14.12 h</span></b></div>
+            <div class="ccol-accent ccol-split">
+              <p><em>Full NK</em><b class="compare-pair"><span>123.4 counts</span><span>2.10 h</span></b><span>6.7× faster than CFD</span></p>
+              <p><em>Top‑4 NK</em><b class="compare-pair"><span>126.0 counts</span><span>0.82 h</span></b><span>17.3× faster than CFD</span></p>
+            </div>
+          </div>
+        </div>
+        <div class="crow">
+          <h4>Mars UAV extreme-OOD design · verified peak L/D, higher is better<sup class="fn"><a href="#fn7" aria-label="Footnote 7">7</a></sup></h4>
+          <div class="ccols">
+            <div><b class="compare-pair"><span>25.76 L/D</span><span>0.67 h</span></b><span>4 / 6 valid · 2 failed</span></div>
+            <div><b class="compare-pair"><span>28.09 L/D</span><span>9.44 h</span></b><span>6 / 6 verified</span></div>
+            <div class="ccol-accent ccol-split">
+              <p><em>Full NK</em><b class="compare-pair"><span>27.88 L/D</span><span>4.32 h</span></b><span>2.2× faster than CFD</span></p>
+              <p><em>Top‑4 NK</em><b class="compare-pair"><span>26.80 L/D</span><span>1.71 h</span></b><span>5.5× faster than CFD</span></p>
+              <span class="compare-verification">6 / 6 verified for both</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="compare-cta"><a href="https://arxiv.org/abs/2608.04400" target="_blank" rel="noreferrer">Full experimental protocols in the paper <span>›</span></a></div>
+    </div>
+  </section>
+
+  <!-- 10. WHY IT WORKS -->
+  <section class="mechanism-section section" id="mechanism" aria-labelledby="mechanism-title">
+    <div class="wrap design-wrap">
+      <header class="design-heading">
+        <h2 id="mechanism-title">Why it works.</h2>
+        <p><b>A low initial residual is not enough.</b> Fast convergence needs both accurate global structure and a Newton solver.</p>
+      </header>
+      <div class="design-panel">
+        <div class="mechanism-comparison">
+          <div class="mechanism-pressure">
+            <div class="mechanism-heading">
+              <h3>Matched-residual starts</h3>
+              <span>Ma 0.76 · α 5.50°</span>
+            </div>
+            <p class="mechanism-control-note"><b>42× lower Field MSE</b> at matched residual <span class="mechanism-note-sub">(median <i>E</i><sub>0</sub><sup>2</sup>, 1.80 × 10⁻⁴ vs 7.65 × 10⁻³). Example case shown.</span></p>
+            <div class="mechanism-pressure-body">
+              <div class="mechanism-fields">
+                <figure>
+                  <img src="assets/mechanism-pressure-surrogate.webp?v=matched-cp" width="640" height="382" decoding="async" alt="Pressure coefficient around the airfoil in the surrogate starting field">
+                  <figcaption><strong>Surrogate start</strong><span>r₀ = <b data-initial-residual="warm">2.78 × 10⁻³</b></span><span>Field MSE <b data-mse="0">0.014</b></span></figcaption>
+                </figure>
+                <figure>
+                  <img src="assets/mechanism-pressure-pseudo_time.webp?v=matched-cp" width="640" height="382" decoding="async" alt="Pressure coefficient around the airfoil in the residual-matched pseudo-time starting field">
+                  <figcaption><strong>Pseudo-time start</strong><span>r₀ = <b data-initial-residual="matched">3.39 × 10⁻³</b></span><span>Field MSE <b data-mse="1">0.169</b></span></figcaption>
+                </figure>
+                <figure>
+                  <img src="assets/mechanism-pressure-reference.webp?v=matched-cp" width="640" height="382" decoding="async" alt="Pressure coefficient around the airfoil in the converged CFD reference field">
+                  <figcaption><strong>CFD reference</strong></figcaption>
+                </figure>
+              </div>
+              <div class="mechanism-pressure-key" role="img" aria-label="Shared pressure coefficient scale, from minus 2 to 1.2, with white at zero">
+                <span>Pressure coefficient, Cp</span>
+                <div class="mechanism-pressure-ramp"></div>
+                <div class="mechanism-pressure-ticks">
+                  <span style="--tick: 0%">−2</span>
+                  <span style="--tick: 31.25%">−1</span>
+                  <span style="--tick: 62.5%">0</span>
+                  <span style="--tick: 100%">1.2</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="mechanism-control">
+            <div class="mechanism-heading">
+              <h3>Controlled convergence</h3>
+              <div class="design-view-toggle" id="mechanism-control" role="group" aria-label="Controlled comparison">
+                <button type="button" data-comparison="solver" aria-pressed="true">Same solver</button>
+                <button type="button" data-comparison="start" aria-pressed="false">Same start</button>
+              </div>
+            </div>
+            <p class="mechanism-control-note" id="mechanism-control-note">NK from both starts — <b>49× faster</b> in this case.</p>
+            <svg class="mechanism-chart" id="mechanism-chart" role="img"></svg>
+            <div class="mechanism-series" id="mechanism-series" aria-label="Time to convergence"></div>
+          </div>
+        </div>
+        <p class="design-caption" id="mechanism-status" role="status" hidden></p>
+        <section class="mechanism-diagnostics" id="initial-state-diagnostics" aria-labelledby="mechanism-diagnostics-title">
+          <header class="mechanism-diagnostics-heading">
+            <h3 id="mechanism-diagnostics-title">Initial-state diagnostics</h3>
+            <p>Local diagnostics of each starting field across 200 OOD queries.</p>
+          </header>
+          <div class="mechanism-diagnostic-grid">
+            <article class="mechanism-margin" data-margin="chi">
+              <h4>Local directional correctability</h4>
+              <p class="mechanism-formula">χ₀ = 1 − E₁ / E₀</p>
+              <p class="mechanism-explanation" id="mechanism-chi-explanation"><b>χ₀ &gt; 0</b> means the local linearization at the starting field reduces initial error (0.5 halves it under an ideal Newton step).</p>
+              <svg class="mechanism-margin-chart" role="img" aria-describedby="mechanism-chi-explanation mechanism-diagnostic-key"></svg>
+              <div class="mechanism-margin-summary" role="group" aria-label="Initial fields with positive first-step margin"></div>
+            </article>
+            <article class="mechanism-margin" data-margin="kappa">
+              <h4>Conditional convergence margin</h4>
+              <p class="mechanism-formula">κ₀ = 1 − βS₀E₁</p>
+              <p class="mechanism-explanation" id="mechanism-kappa-explanation"><b>κ₀ &gt; 0</b> means the starting field satisfies the paper’s directional convergence criterion under local nonlinearity.<sup class="fn"><a href="#fn6" aria-label="Footnote 6">6</a></sup></p>
+              <svg class="mechanism-margin-chart" role="img" aria-describedby="mechanism-kappa-explanation mechanism-diagnostic-key"></svg>
+              <div class="mechanism-margin-summary" role="group" aria-label="Initial fields with positive convergence margin"></div>
+            </article>
+          </div>
+          <p class="mechanism-diagnostic-key" id="mechanism-diagnostic-key">Cumulative share (≤ margin); <b>lower &amp; right = more positive cases</b> (shaded).</p>
+          <p class="mechanism-takeaway">Even uniform starts have χ₀ &gt; 0 in <strong>98%</strong> of cases, yet <strong>0%</strong> satisfy the convergence criterion (κ₀ &gt; 0) — compared with <strong>9%</strong> for residual-matched pseudo-time and <strong>62%</strong> for surrogate starts.</p>
+        </section>
+      </div>
+    </div>
+  </section>
+
+  <!-- 11. FAQ -->
+  <section class="faq-section section" id="faq" aria-labelledby="faq-title">
+    <div class="wrap design-wrap">
+      <div class="faq-head">
+        <div>
+          <h2 id="faq-title">Questions? Answers.</h2>
+        </div>
+        <button class="faq-all" id="faq-all" type="button" aria-expanded="false">Expand all <svg viewBox="0 0 10 10" aria-hidden="true"><path d="M1.5 3.5 5 7 8.5 3.5" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      </div>
+      <div class="faq-list" id="faq-list">
+        <details>
+          <summary>What surrogate model is used, and does the framework depend on it?<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 7.5 10 13.5 16 7.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></summary>
+          <div class="faq-ans"><p>The paper uses a <b>Flow-field Schrödinger Bridge (FSB)</b> predictor, but <b>Surrogate–Newton is architecture-agnostic</b>: any full-field surrogate on the solver mesh can warm-start Newton–Krylov correction.</p></div>
+        </details>
+        <details>
+          <summary><span>How is geometric OOD distance (<i>d</i><sub>5</sub>*) computed?</span><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 7.5 10 13.5 16 7.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></summary>
+          <div class="faq-ans">
+            <p>For any query geometry, we compute <i>d</i><sub>5</sub> — the mean distance to its <b>five nearest training geometries</b> — and normalize it by the training set’s <b>leave-one-out 99th percentile</b> (<i>P</i><sub>99,train</sub>): <i>d</i><sub>5</sub>* = <i>d</i><sub>5</sub> / <i>P</i><sub>99,train</sub>. Thus <b><i>d</i><sub>5</sub>* &gt; 1 lies beyond the training P99 boundary</b>.</p>
+            <p style="margin-top:8px">Each benchmark uses its native geometry metric: <b>2D airfoils</b> use RMS wall-coordinate difference on chord-normalized profiles (27,117 training records); <b>3D wing sections</b> use RMS vertical-coordinate difference across 7 control sections; <b>3D wing planforms</b> use standardized Euclidean distance over sweep, aspect ratio, taper, kink fraction, and root adjustment (6,234 training wings).</p>
+          </div>
+        </details>
+        <details>
+          <summary>How are convergence times and optimization speedups measured?<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 7.5 10 13.5 16 7.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></summary>
+          <div class="faq-ans"><p>All solver comparisons use the <b>same mesh, equations (RANS–SA in ADflow), and residual target</b> (<i>r</i> ≤ 10⁻⁸ in 2D; <i>r</i> ≤ 10⁻⁶ in 3D). Optimization speedups compare mean active optimization time across identical seeds (17.3× transonic Top-4; 5.5× Mars UAV Top-4).</p></div>
+        </details>
+        <details>
+          <summary>What happens on hard OOD cases that hit the time budget?<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 7.5 10 13.5 16 7.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></summary>
+          <div class="faq-ans"><p><b>The solver never silently returns an unverified answer.</b> It monitors the discrete equation residual directly, uses stabilized startup with optional re-prediction, and reports actual residuals if the wall-time budget is reached.</p></div>
+        </details>
+        <details>
+          <summary>Why is a small initial residual not enough for fast convergence?<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 7.5 10 13.5 16 7.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></summary>
+          <div class="faq-ans"><p><b>Matched residuals can hide 42× larger Field MSE</b> (median <i>E</i><sub>0</sub><sup>2</sup>, 7.65 × 10⁻³ vs 1.80 × 10⁻⁴). Pseudo-time damping lowers local residuals while leaving global flow structure far off, whereas surrogate starts satisfy the directional convergence criterion (κ₀ &gt; 0) in 62% of OOD cases vs 9% for pseudo-time and 0% for uniform flow.</p></div>
+        </details>
+        <details>
+          <summary>How does Top-K screening accelerate aerodynamic optimization?<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 7.5 10 13.5 16 7.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></summary>
+          <div class="faq-ans"><p>Each generation, the surrogate ranks all candidates in milliseconds and <b>NK correction runs only on the top <i>K</i></b> (e.g., 4 or 12), cutting optimization time up to 17.3× while keeping verified design quality.</p></div>
+        </details>
+        <details>
+          <summary>Can Surrogate–Newton extend beyond fixed mesh topologies?<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 7.5 10 13.5 16 7.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></summary>
+          <div class="faq-ans"><p>Current benchmarks use a shared 2D O-grid and a 13-block 3D wing mesh (~3.5M cells). Extending to varying or unstructured meshes requires compatible state transfer and effective preconditioning.</p></div>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <!-- 12. PAPER & RESOURCES (prioritized before collapsible footnotes) -->
+  <section class="research section section-band" id="research" aria-labelledby="research-title">
+    <div class="wrap design-wrap research-layout">
+      <div class="research-meta">
+        <p class="section-kicker">Paper &amp; resources</p>
+        <h2 id="research-title">Reliable and efficient steady CFD from surrogate predictions through Newton–Krylov correction</h2>
+        <p class="authors"><a class="author-link" href="https://leimingcheng.github.io/" target="_blank" rel="noopener">Mingcheng Lei</a><span>Weishao Tang</span><span>Yufei Zhang*</span><span>Haixin Chen*</span></p>
+        <p class="affiliation">School of Aerospace Engineering &amp; State Key Laboratory of Advanced Space Propulsion, Tsinghua University<br>*Corresponding authors</p>
+        <div class="research-btns">
+          <a class="pill-btn solid" href="https://arxiv.org/abs/2608.04400" target="_blank" rel="noreferrer">Paper ↗</a>
+          <a class="pill-btn out" href="https://github.com/LeiMingcheng/surrogate-newton-cfd" target="_blank" rel="noreferrer">Code ↗</a>
+          <a class="pill-btn out" href="https://huggingface.co/xzztj/surrogate-newton-cfd-fsb-dit-airfoil-inference" target="_blank" rel="noreferrer">Model ↗</a>
+        </div>
+      </div>
+      <div class="bib-card">
+        <div class="bib-head">
+          <span>BibTeX</span>
+          <button id="copy-citation" type="button"><span id="citation-label">Copy</span></button>
+        </div>
+<pre id="bib-text">@article{lei2026surrogate_newton,
+  title   = {Reliable and efficient steady CFD
+             from surrogate predictions through
+             Newton--Krylov correction},
+  author  = {Lei, Mingcheng and Tang, Weishao and
+             Zhang, Yufei and Chen, Haixin},
   journal = {arXiv preprint arXiv:2608.04400},
-  year    = {2026},
-  url     = {https://arxiv.org/abs/2608.04400}
-}</code></pre>
-      </section>
-    </main>
+  year    = {2026}
+}</pre>
+      </div>
+    </div>
+  </section>
 
-    <footer class="paper-footer page-width">
-      <p>Surrogate-Newton CFD · Tsinghua University</p>
-      <p><a href="mailto:leimc22@mails.tsinghua.edu.cn">leimc22@mails.tsinghua.edu.cn</a></p>
-    </footer>
-  </body>
+  <!-- 13. COLLAPSIBLE FOOTNOTES -->
+  <section class="notes-section" id="footnotes" aria-label="Footnotes">
+    <div class="wrap design-wrap">
+      <details class="notes-drawer" id="footnotes-drawer">
+        <summary>Notes &amp; definitions (7)<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></summary>
+        <ol>
+          <li id="fn1">2D convergence timing compares median residual-ratio trajectories across 200 paired OOD queries on 8 MPI ranks to target <i>r</i> ≤ 10⁻⁸: 1.76 s for Surrogate + NK vs 10.10 s for cold-start CFD (5.8× median speedup at termination). Per-case hitting-time medians including ~0.04 s neural prediction are 1.79 s vs 10.11 s (still 5.7×).</li>
+          <li id="fn2">3D wing timing covers 60 paired cases on ~3.5M-cell 13-block meshes to target <i>r</i> ≤ 10⁻⁶: 89 s vs 472 s median elapsed time (5.2× median paired speedup). For cold-start multigrid CFD, coarse-grid relative reductions are mapped continuously in log space onto the finest-grid scale; vertical dashed lines mark grid transfers.</li>
+          <li id="fn3">Geometric OOD distance <i>d</i><sub>5</sub>* is the mean root-mean-square wall-coordinate distance to the five nearest training geometries, normalized by the training-set leave-one-out 99th percentile (P99). Values above 1 lie outside training P99. 2D airfoil views use 1:2 vertical scaling (6.2× for thin Mars UAV sections).</li>
+          <li id="fn4">Field MSE is evaluated against converged CFD references using five flow and turbulence channels (ρ, u, v, p, ν̃) for 2D airfoils and nondimensional pressure <i>p</i>/<i>p</i><sub>∞</sub> for 3D wings. Wing errors use the original archived CFD references, with the surrogate prediction retained in four cases. Weighted Force error is <i>E</i><sub>F</sub> = |ΔC<sub>L</sub>| + 10|ΔC<sub>D</sub>|.</li>
+          <li id="fn5">1-NN + NK initializes Newton–Krylov from the nearest-neighbor training CFD solution (9.22 s median in 2D). In 3D pilot tests, sparse wing sampling caused 1-NN initialization to converge less reliably and more slowly than uniform initialization, so cold-start CFD serves as the primary 3D baseline.</li>
+          <li id="fn6">In the directional convergence criterion κ₀ = 1 − β<i>S</i><sub>0</sub><i>E</i><sub>1</sub>, <i>S</i><sub>0</sub> estimates the local nonlinear response from finite probes along the initial error <b>e</b><sub>0</sub> and first Newton defect <b>g</b><sub>0</sub>, and β ≥ 1 bounds directional growth along subsequent iterates. Field MSE in the matched-residual comparison is the scaled full-state MSE (<i>E</i><sub>0</sub>²).</li>
+          <li id="fn7">Transonic (seeds 0–3) and Mars UAV (seeds 0–5) efficiency plots both report active optimization time excluding post-hoc independent CFD verification: transonic Top-4 achieves 17.3× (0.82 h vs 14.12 h; 16.3× if verification is included) and Mars UAV Top-4 achieves 5.5× (1.71 h vs 9.44 h). All reported drag and L/D metrics are independently verified by cold-start CFD. The RAE2822 optimization history uses independent CFL3D evaluations; all other benchmarks use ADflow.</li>
+        </ol>
+      </details>
+    </div>
+  </section>
+</main>
+
+<footer class="footer wrap design-wrap">
+  <a class="brand" href="#top">Surrogate–Newton</a>
+  <span>Learning meets numerical physics.</span>
+  <a href="mailto:leimc22@mails.tsinghua.edu.cn">Get in touch ↗</a>
+</footer>
+<div class="toast" id="toast" role="status" hidden></div>
+
+<script src="field-display.js?v=closer-cases" defer></script>
+<script src="flow-renderer.js?v=closer-cases" defer></script>
+<script src="highlights-draw.js?v=playback-93" defer></script>
+<script src="highlights_playback93.js?v=polish-2" defer></script>
+<script src="app.js?v=footnote-anchor" defer></script>
+<script src="web-demo.js?v=polish-1" defer></script>
+<script src="method.js?v=4" defer></script>
+<script src="closer-look.js?v=closer-unlocked" defer></script>
+<script src="offline-ood.js?v=fig6c-1085" defer></script>
+<script src="hero-flow.js?v=sequence" defer></script>
+<script src="mechanism.js?v=polish-1" defer></script>
+<script src="aerodynamic-design.js?v=polish-1" defer></script>
+<script src="heading-motion.js?v=plan-a-1" defer></script>
+</body>
 </html>

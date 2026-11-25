@@ -1,0 +1,14 @@
+/* Statistics use the same progress as the camera, with no independent delayed animation. */
+.overview-key .overview-initial-legend,.overview-key[data-statistics="true"] .overview-initial-legend{opacity:var(--legend-initial-opacity,1);transition:none}
+.overview-key .overview-statistics,.overview-key[data-statistics="true"] .overview-statistics{grid-template-rows:1fr;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:20px;opacity:var(--legend-stats-opacity,0);transform:translateY(var(--legend-stats-offset,6px));transition:none}
+.overview-key .overview-metric-title,.overview-key[data-statistics="false"] .overview-metric-title{font:400 14px/1.3 var(--sans);white-space:nowrap;text-align:left;transform:translateY(18px);opacity:1}
+.highlight-result-row{min-height:42px}
+.highlight-result-row .highlight-result{gap:10px}
+.highlight-result-row .highlight-result>span{font:400 20px/1.3 var(--sans)}
+.highlight-result-row #hero-clock{font-family:var(--sans);font-size:28px;font-weight:500;line-height:1.2;letter-spacing:-.01em}
+@media(min-width:1101px){.highlight-stage[data-scene="1"] .hero-scene-area{height:602px}}
+@media(max-width:760px){
+ .overview-key .overview-statistics,.overview-key[data-statistics="true"] .overview-statistics{grid-template-columns:1fr}
+ .overview-key .overview-metric-title,.overview-key[data-statistics="false"] .overview-metric-title{position:absolute;right:0;top:0;transform:none;font-size:12px}
+ .highlight-result-row{min-height:40px}.highlight-result-row .highlight-result>span{font-size:16px}.highlight-result-row #hero-clock{font-size:23px}
+}

@@ -1,0 +1,87 @@
+.hero .hero-project {
+  margin: 0 auto 16px;
+  font: 600 clamp(19px, 2.4vw, 29px)/1.2 var(--display);
+  color: var(--ink);
+}
+
+.hero .hero-copy h1 {
+  font-size: clamp(36px, 5.3vw, 72px);
+  line-height: 1.08;
+  text-wrap: balance;
+}
+
+.hero .hero-copy .hero-lede {
+  max-width: 660px;
+  margin: 19px auto 0;
+  font-size: clamp(16px, 1.5vw, 20px);
+  text-wrap: balance;
+}
+
+.hero-lede strong {
+  font-weight: 700;
+}
+
+.hero-lede .hero-surrogate {
+  color: var(--blue);
+}
+
+.hero-lede .hero-newton {
+  color: #a65f37;
+}
+
+.highlight-stage .highlight-playback-row {
+  align-items: flex-end;
+  flex-direction: column;
+  white-space: nowrap;
+  font: 400 13px/1.2 var(--sans);
+  font-variant-numeric: tabular-nums;
+}
+
+#scene-airfoils {
+  padding-top: 18px;
+}
+
+#overview-surface {
+  transform: scale(.93);
+}
+
+#wing-conditions {
+  position: absolute;
+  top: 61%;
+  right: 2%;
+  transform: translateY(-50%);
+  font: 600 clamp(12px, 1.2vw, 17px)/1.25 var(--sans);
+  color: var(--ink);
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+@media (max-width: 760px) {
+  .hero .hero-project { margin-bottom: 12px; }
+  #overview-surface { transform: scale(.97); }
+  .highlight-stage .highlight-playback-row,
+  .highlight-stage[data-scene="2"] .highlight-playback-row {
+    top: 80px;
+    align-items: center;
+    flex-direction: row-reverse;
+    gap: 12px;
+    font-size: 12px;
+  }
+  #wing-conditions {
+    display: grid;
+    justify-items: end;
+    font-size: 10px;
+    line-height: 1.15;
+  }
+  .wing-condition-divider { display: none; }
+}
+
+.highlights-scale-note {
+  width: fit-content;
+  max-width: 100%;
+  margin: 6px 0 0;
+  color: #6e6e73;
+  font-size: .75rem;
+  line-height: 1.35;
+  text-align: left;
+}
