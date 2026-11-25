@@ -22,7 +22,7 @@
   <link rel="stylesheet" href="mechanism.css?v=polish-1">
   <link rel="stylesheet" href="aerodynamic-design.css?v=plan-a-1">
   <link rel="stylesheet" href="editorial.css?v=hero-sweep-2">
-  <link rel="stylesheet" href="polish.css?v=shared-convergence">
+  <link rel="stylesheet" href="polish.css?v=slide-rail">
 </head>
 <body>
 <a class="skip" href="#main">Skip to content</a>
@@ -124,39 +124,54 @@
           <span class="highlight-playback" id="highlight-playback"><svg viewBox="0 0 24 16" aria-hidden="true"><path d="M6 2 16 8 6 14Z" fill="currentColor"/></svg><span id="highlight-playback-value">Playback 2.5×</span></span>
           <span id="highlight-mpi">8 MPI ranks</span>
         </div>
-        <div class="overview-key" id="overview-key" data-statistics="false">
-          <div class="overview-initial-legend" id="overview-initial-legend"><span><i class="legend-line copper"></i>Surrogate + NK</span><span><i class="legend-line cold-line"></i>Cold-start CFD</span></div>
-          <div class="overview-statistics" id="overview-statistics" aria-hidden="true">
-            <div class="overview-key-methods">
-              <span class="overview-method"><span class="overview-method-label"><i class="legend-line copper"></i>Surrogate + NK</span><strong id="overview-median-nk" aria-hidden="true">1.76 s</strong></span>
-              <span class="overview-method"><span class="overview-method-label"><i class="legend-line cold-line"></i>Cold-start CFD</span><strong id="overview-median-cold" aria-hidden="true">10.10 s</strong></span>
-              <span class="overview-method overview-speedup" id="overview-speedup-metric" aria-hidden="true"><span class="overview-method-label">Speedup</span><strong id="overview-speedup">5.8×</strong></span>
+        <div class="highlight-rail" id="highlight-scenes" tabindex="0" role="region" aria-roledescription="carousel" aria-label="Highlights figures">
+          <div class="highlight-scene" id="scene-overview" role="tabpanel" aria-labelledby="tab-overview">
+            <div class="overview-key" id="overview-key" data-statistics="false">
+              <div class="overview-initial-legend" id="overview-initial-legend"><span><i class="legend-line copper"></i>Surrogate + NK</span><span><i class="legend-line cold-line"></i>Cold-start CFD</span></div>
+              <div class="overview-statistics" id="overview-statistics" aria-hidden="true">
+                <div class="overview-key-methods">
+                  <span class="overview-method"><span class="overview-method-label"><i class="legend-line copper"></i>Surrogate + NK</span><strong id="overview-median-nk" aria-hidden="true">1.76 s</strong></span>
+                  <span class="overview-method"><span class="overview-method-label"><i class="legend-line cold-line"></i>Cold-start CFD</span><strong id="overview-median-cold" aria-hidden="true">10.10 s</strong></span>
+                  <span class="overview-method overview-speedup" id="overview-speedup-metric" aria-hidden="true"><span class="overview-method-label">Speedup</span><strong id="overview-speedup">5.8×</strong></span>
+                </div>
+                <span class="overview-metric-title" id="overview-metric-title" aria-hidden="true" aria-label="Median convergence time across 200 paired OOD queries">Median times</span>
+              </div>
             </div>
-            <span class="overview-metric-title" id="overview-metric-title" aria-hidden="true" aria-label="Median convergence time across 200 paired OOD queries">Median times</span>
-          </div>
-        </div>
-        <div class="overview-key wing-overview-key" id="wing-key" data-statistics="true" hidden>
-          <div class="overview-statistics">
-            <div class="overview-key-methods">
-              <span class="overview-method"><span class="overview-method-label"><i class="legend-line copper"></i>Surrogate + NK</span><strong id="wing-median-nk">89 s</strong></span>
-              <span class="overview-method"><span class="overview-method-label"><i class="legend-line cold-line"></i>Cold-start CFD</span><strong id="wing-median-cold">472 s</strong></span>
-              <span class="overview-method overview-speedup"><span class="overview-method-label">Speedup</span><strong id="wing-median-speedup">5.2×</strong></span>
+            <div class="highlight-figure">
+              <video class="hero-video-decoder" aria-hidden="true" id="overview-video" width="1600" height="820" muted playsinline preload="none" data-src="assets/highlights/overview-rectangular-cp005.mp4" aria-label="Residual convergence surface across geometric out-of-distribution distance with paired pressure and error fields." aria-describedby="overview-timing"></video>
+              <canvas id="overview-surface" width="1600" height="820" role="img" aria-label="Residual convergence surface across geometric out-of-distribution distance with paired pressure and error fields." aria-describedby="overview-timing"></canvas>
+              <span class="visually-hidden" id="overview-timing"></span>
             </div>
-            <span class="overview-metric-title" aria-label="Median convergence time across 60 paired wing cases">Median times</span>
           </div>
-        </div>
-        <div class="hero-scene-area">
-          <div class="hero-panel" id="scene-overview" role="tabpanel" aria-labelledby="tab-overview"><video class="hero-video-decoder" aria-hidden="true" id="overview-video" width="1600" height="820" muted playsinline preload="none" data-src="assets/highlights/overview-rectangular-cp005.mp4" aria-label="Residual convergence surface across geometric out-of-distribution distance with paired pressure and error fields." aria-describedby="overview-timing"></video><canvas id="overview-surface" width="1600" height="820" role="img" aria-label="Residual convergence surface across geometric out-of-distribution distance with paired pressure and error fields." aria-describedby="overview-timing"></canvas><span class="visually-hidden" id="overview-timing"></span></div>
-          <div class="hero-panel" id="scene-airfoils" role="tabpanel" aria-labelledby="tab-airfoils" hidden><video class="hero-video-decoder" aria-hidden="true" id="airfoil-matrix-video" width="1920" height="1080" muted playsinline preload="none" data-src="assets/highlights/airfoils-8mpi-cp005.mp4" aria-label="Thirty distinct OOD benchmark geometries with adjacent pressure and error fields converging in under 3 seconds each." aria-describedby="airfoil-matrix-description"></video><canvas id="airfoil-matrix-surface" width="1920" height="1080" role="img" aria-label="Thirty distinct OOD benchmark geometries with adjacent pressure and error fields converging in under 3 seconds each." aria-describedby="airfoil-matrix-description"></canvas><span class="visually-hidden" id="airfoil-matrix-description"></span><p class="compact-only scene-subset-note">12 of 30 cases shown. Open on a wider screen for all 30.</p></div>
-          <div class="hero-panel" id="scene-wings" role="tabpanel" aria-labelledby="tab-wings" hidden>
-            <div class="wing-media">
-              <video class="hero-video-decoder" id="wing-video" width="1600" height="810" muted playsinline preload="none" data-src="assets/highlights/wing-paired.mp4" aria-hidden="true"></video>
-              <canvas id="wing-canvas" width="1600" height="810" role="img" aria-label="One DLR-F6 semispan on 3,527,680 volume cells: surface pressure coefficient, local Mach sections and pressure-gradient contours evolving through NK correction"></canvas>
-              <span id="wing-conditions" hidden><span id="wing-mach-angle"></span> <span class="wing-condition-divider" aria-hidden="true">·</span> <span id="wing-reynolds"></span></span>
-              <figure class="wing-case-chart" aria-label="Displayed wing case convergence comparison">
-                <div class="wing-case-key"><span><i class="legend-line copper"></i>Surrogate + NK</span><span><i class="legend-line cold-line"></i>Cold-start CFD</span></div>
-                <svg id="wing-case-residual" viewBox="0 0 440 197" role="img" aria-label="Residual versus solver time for Surrogate + NK and cold-start CFD"></svg>
-              </figure>
+          <div class="highlight-scene" id="scene-airfoils" role="tabpanel" aria-labelledby="tab-airfoils" aria-hidden="true" inert>
+            <div class="highlight-figure">
+              <video class="hero-video-decoder" aria-hidden="true" id="airfoil-matrix-video" width="1920" height="1080" muted playsinline preload="none" data-src="assets/highlights/airfoils-8mpi-cp005.mp4" aria-label="Thirty distinct OOD benchmark geometries with adjacent pressure and error fields converging in under 3 seconds each." aria-describedby="airfoil-matrix-description"></video>
+              <canvas id="airfoil-matrix-surface" width="1920" height="1080" role="img" aria-label="Thirty distinct OOD benchmark geometries with adjacent pressure and error fields converging in under 3 seconds each." aria-describedby="airfoil-matrix-description"></canvas>
+              <span class="visually-hidden" id="airfoil-matrix-description"></span>
+              <p class="compact-only scene-subset-note">12 of 30 cases shown. Open on a wider screen for all 30.</p>
+            </div>
+          </div>
+          <div class="highlight-scene" id="scene-wings" role="tabpanel" aria-labelledby="tab-wings" aria-hidden="true" inert>
+            <div class="overview-key wing-overview-key" id="wing-key" data-statistics="true">
+              <div class="overview-statistics">
+                <div class="overview-key-methods">
+                  <span class="overview-method"><span class="overview-method-label"><i class="legend-line copper"></i>Surrogate + NK</span><strong id="wing-median-nk">89 s</strong></span>
+                  <span class="overview-method"><span class="overview-method-label"><i class="legend-line cold-line"></i>Cold-start CFD</span><strong id="wing-median-cold">472 s</strong></span>
+                  <span class="overview-method overview-speedup"><span class="overview-method-label">Speedup</span><strong id="wing-median-speedup">5.2×</strong></span>
+                </div>
+                <span class="overview-metric-title" aria-label="Median convergence time across 60 paired wing cases">Median times</span>
+              </div>
+            </div>
+            <div class="highlight-figure">
+              <div class="wing-media">
+                <video class="hero-video-decoder" id="wing-video" width="1600" height="810" muted playsinline preload="none" data-src="assets/highlights/wing-paired.mp4" aria-hidden="true"></video>
+                <canvas id="wing-canvas" width="1600" height="810" role="img" aria-label="One DLR-F6 semispan on 3,527,680 volume cells: surface pressure coefficient, local Mach sections and pressure-gradient contours evolving through NK correction"></canvas>
+                <span id="wing-conditions" hidden><span id="wing-mach-angle"></span> <span class="wing-condition-divider" aria-hidden="true">·</span> <span id="wing-reynolds"></span></span>
+                <figure class="wing-case-chart" aria-label="Displayed wing case convergence comparison">
+                  <div class="wing-case-key"><span><i class="legend-line copper"></i>Surrogate + NK</span><span><i class="legend-line cold-line"></i>Cold-start CFD</span></div>
+                  <svg id="wing-case-residual" viewBox="0 0 440 197" role="img" aria-label="Residual versus solver time for Surrogate + NK and cold-start CFD"></svg>
+                </figure>
+              </div>
             </div>
           </div>
         </div>
@@ -951,7 +966,8 @@
 
 <script src="field-display.js?v=closer-cases" defer></script>
 <script src="flow-renderer.js?v=closer-cases" defer></script>
-<script src="highlights_playback93.js?v=near-viewport" defer></script>
+<script src="carousel.js?v=1" defer></script>
+<script src="highlights_playback93.js?v=slide-rail" defer></script>
 <script src="app.js?v=release-20261125" defer></script>
 <script src="web-demo.js?v=embed-refresh" defer></script>
 <script src="method.js?v=4" defer></script>
@@ -959,7 +975,7 @@
 <script src="offline-ood.js?v=fig6c-1085-links" defer></script>
 <script src="hero-flow.js?v=hero-sweep-2" defer></script>
 <script src="mechanism.js?v=polish-1" defer></script>
-<script src="aerodynamic-design.js?v=polish-1" defer></script>
+<script src="aerodynamic-design.js?v=slide-rail" defer></script>
 <script src="heading-motion.js?v=plan-a-1" defer></script>
 </body>
 </html>

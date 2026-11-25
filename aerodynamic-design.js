@@ -485,59 +485,20 @@
     const previous = block.querySelector('[data-role="slide-prev"]');
     const next = block.querySelector('[data-role="slide-next"]');
     const tabs = [...block.querySelectorAll('[data-role="slide-tabs"] button')];
-    const reduced = matchMedia('(prefers-reduced-motion: reduce)');
-    let active = -1;
-    let animation = 0;
-
-    function sync() {
-      const nearest = slides.reduce((best, slide, index) =>
-        Math.abs(track.scrollLeft - slide.offsetLeft) < Math.abs(track.scrollLeft - slides[best].offsetLeft) ? index : best, 0);
-      if (nearest === active) return;
-      active = nearest;
-      if (previous) previous.disabled = active === 0;
-      if (next) next.disabled = active === slides.length - 1;
-      slides.forEach((slide, index) => {
-        const inactive = index !== active;
+    let active = 0;
+    const go = mountHorizontalCarousel(track, index => {
+      active = index;
+      previous.disabled = active === 0;
+      next.disabled = active === slides.length - 1;
+      slides.forEach((slide, page) => {
+        const inactive = page !== active;
         slide.setAttribute('aria-hidden', String(inactive));
         for (const control of slide.querySelectorAll('.design-legend')) control.inert = inactive;
         for (const chart of slide.querySelectorAll('.design-pick-chart')) chart.setAttribute('tabindex', inactive ? '-1' : '0');
       });
-      tabs.forEach((button, index) => button.setAttribute('aria-selected', String(index === active)));
+      tabs.forEach((button, page) => button.setAttribute('aria-selected', String(page === active)));
       onPage(active);
-    }
-
-    function releaseScroll() {
-      if (!animation) return;
-      cancelAnimationFrame(animation);
-      animation = 0;
-      track.style.removeProperty('scroll-snap-type');
-    }
-
-    function go(index) {
-      if (!slides[index]) return;
-      const from = track.scrollLeft;
-      const to = slides[index].offsetLeft;
-      if (reduced.matches || Math.abs(to - from) < 1) {
-        releaseScroll();
-        track.scrollTo({left: to, behavior: 'instant'});
-        sync();
-        return;
-      }
-      cancelAnimationFrame(animation);
-      track.style.scrollSnapType = 'none';
-      const started = performance.now();
-      const duration = Math.min(490, 300 + Math.abs(to - from) / 7);
-      function advance(now) {
-        const time = Math.min(1, (now - started) / duration);
-        track.scrollLeft = from + (to - from) * time * time * (3 - 2 * time);
-        if (time < 1) animation = requestAnimationFrame(advance);
-        else {
-          releaseScroll();
-          sync();
-        }
-      }
-      animation = requestAnimationFrame(advance);
-    }
+    });
 
     previous?.addEventListener('click', () => go(active - 1));
     next?.addEventListener('click', () => go(active + 1));
@@ -546,18 +507,6 @@
       const index = slides.indexOf(event.target.closest('.design-result-figure'));
       if (index >= 0 && index !== active) go(index);
     });
-    track.addEventListener('scroll', sync, {passive: true});
-    track.addEventListener('wheel', releaseScroll, {passive: true});
-    track.addEventListener('pointerdown', releaseScroll, {passive: true});
-    track.addEventListener('keydown', event => {
-      if (event.target !== track) return;
-      const index = {ArrowLeft: active - 1, ArrowRight: active + 1, Home: 0, End: slides.length - 1}[event.key];
-      if (index === undefined) return;
-      event.preventDefault();
-      go(index);
-    });
-    new ResizeObserver(() => requestAnimationFrame(sync)).observe(track);
-    sync();
   }
 
   function mountTaskBlock(block, taskKey, taskData) {

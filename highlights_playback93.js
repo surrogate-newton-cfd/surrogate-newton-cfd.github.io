@@ -192,10 +192,15 @@ async function initHighlights(){
  scrub.addEventListener('input',()=>{elapsed=clamp(Number(scrub.value)/1000)*durations[index];states[index].playing=false;changed();});
 
  function sync(){
-  tabs.forEach((tab,i)=>{tab.setAttribute('aria-selected',String(i===index));tab.tabIndex=i===index?0:-1;panels[i].hidden=i!==index;panels[i].style.opacity='1';});
-  setText(el('hero-scene-caption'),captions[index]);el('overview-key').hidden=index!==0;
-  const wingKey=el('wing-key');if(wingKey)wingKey.hidden=index!==2;
-  const scaleNote=el('highlights-scale-note');if(scaleNote)scaleNote.hidden=index===2;
+  tabs.forEach((tab,i)=>{
+   const selected=i===index;
+   tab.setAttribute('aria-selected',String(selected));
+   tab.tabIndex=selected?0:-1;
+   panels[i].setAttribute('aria-hidden',String(!selected));
+   panels[i].inert=!selected;
+  });
+  setText(el('hero-scene-caption'),captions[index]);
+  el('highlights-scale-note').style.visibility=index===2?'hidden':'';
   setText(el('highlight-mpi'),mpiLabels[index]);
   el('highlight-player').setAttribute('data-scene',String(index));
   if(index!==0)overview.pause();if(index!==1)matrix.pause();if(index!==2)wingVideo.pause();
@@ -218,15 +223,15 @@ async function initHighlights(){
   paintVideo(video);
  }
  function render(){
-  panels[index].style.opacity='1';updateControls();
+  updateControls();
   setText(el('highlight-playback-value'),'Playback '+[overviewSource.animation.playback_rate,airfoils.animation.rate,wing.playback_label_multiplier][index]+'×');
   el('highlight-playback').style.visibility='visible';
   if(index===0){
    videoFrame(overview,durations[0]);
    const animation=overviewSource.animation,timing=overviewSource.timing_comparison,solverTime=timing.cold_seconds*clamp((elapsed-animation.solver_start)/animation.solver_duration);
    const tilt=clamp((elapsed-animation.tilt_start)/(animation.tilt_end-animation.tilt_start)),p=tilt*tilt*(3-2*tilt);
-   const key=el('overview-key');key.style.setProperty('--legend-initial-opacity',String(1-clamp(p/.35)));key.style.setProperty('--legend-stats-opacity',String(clamp((p-.25)/.65)));key.style.setProperty('--legend-stats-offset',(6*(1-p))+'px');
-   const showStatistics=p>.25;
+   const key=el('overview-key');key.style.setProperty('--legend-initial-opacity',String(1-clamp(p/.28)));key.style.setProperty('--legend-stats-opacity',String(clamp((p-.28)/.62)));key.style.setProperty('--legend-stats-offset',(6*(1-p))+'px');
+   const showStatistics=p>.28;
    el('overview-key').setAttribute('data-statistics',String(showStatistics));
    el('overview-statistics').setAttribute('aria-hidden',String(!showStatistics));el('overview-initial-legend').setAttribute('aria-hidden',String(showStatistics));
    for(const id of ['overview-metric-title','overview-median-nk','overview-median-cold','overview-speedup-metric'])el(id).setAttribute('aria-hidden',String(!showStatistics));
@@ -246,15 +251,23 @@ async function initHighlights(){
    drawWingComparison(elapsed);
   }
  }
+ for(const video of surfaces.keys())paintVideo(video);
+ const go=mountHorizontalCarousel(el('highlight-scenes'),next=>{
+  states[index].elapsed=elapsed;
+  index=next;
+  elapsed=states[index].elapsed;
+  dirty=true;
+  sync();
+  render();
+ });
  tabs.forEach((tab,i)=>{
-  tab.onclick=()=>{states[index].elapsed=elapsed;index=i;elapsed=states[i].elapsed;dirty=true;sync();render();};
-  tab.onkeydown=e=>{if(!['ArrowLeft','ArrowRight','Home','End'].includes(e.key))return;e.preventDefault();const next=e.key==='Home'?0:e.key==='End'?2:(i+(e.key==='ArrowLeft'?2:1))%3;tabs[next].onclick();tabs[next].focus();};
+  tab.onclick=()=>go(i);
+  tab.onkeydown=e=>{if(!['ArrowLeft','ArrowRight','Home','End'].includes(e.key))return;e.preventDefault();const next=e.key==='Home'?0:e.key==='End'?2:(i+(e.key==='ArrowLeft'?2:1))%3;go(next);tabs[next].focus({preventScroll:true});};
  });
  motion.addEventListener('change',()=>{for(const state of states)state.playing=false;dirty=true;});
  new IntersectionObserver(entries=>{visible=entries[0].isIntersecting;if(visible)dirty=true;else{overview.pause();matrix.pause();wingVideo.pause();}},{threshold:.18}).observe(el('highlight-player'));
  document.addEventListener?.('visibilitychange',()=>{if(document.hidden){overview.pause();matrix.pause();wingVideo.pause();}else dirty=true;});
  globalThis.addEventListener?.('resize',()=>dirty=true);
- sync();render();dirty=false;
  function tick(now){
   const dt=last?Math.min((now-last)/1000,.1):0;last=now;
   if(states[index].playing&&visible&&!document.hidden){elapsed=Math.min(elapsed+dt,durations[index]);states[index].elapsed=elapsed;if(elapsed>=durations[index])states[index].playing=false;dirty=true;}

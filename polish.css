@@ -2,15 +2,96 @@
 
 .compact-only{display:none}
 
+.highlights-band .highlight-stage .highlight-playback-row {
+  position: static;
+  width: max-content;
+  min-height: 36px;
+  margin: 0 0 4px auto;
+}
+
+.highlight-rail {
+  position: relative;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 100%;
+  align-items: stretch;
+  overflow: auto hidden;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  overscroll-behavior-x: contain;
+}
+
+.highlight-rail::-webkit-scrollbar { display: none; }
+.highlight-rail:focus-visible { outline: 2px solid var(--copper); outline-offset: -2px; }
+.highlight-scene {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  scroll-snap-align: start;
+}
+
+.highlight-figure {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  flex: 1;
+}
+
+.highlight-figure video { display: none; }
+.highlight-figure canvas { display: block; width: 100%; height: auto; object-fit: contain; }
+#overview-surface { aspect-ratio: 1600 / 820; }
+#airfoil-matrix-surface { aspect-ratio: 1920 / 1080; }
+#wing-canvas { aspect-ratio: 1600 / 810; }
+
+.highlight-stage .highlight-rail .highlight-scene .overview-key {
+  display: grid;
+  grid-template-areas: "legend";
+  align-items: center;
+  min-height: 82px;
+  width: 100%;
+  margin: 0 auto 10px;
+}
+
+.highlight-rail .overview-key .overview-initial-legend,
+.highlight-rail .overview-key .overview-statistics {
+  grid-area: legend;
+  position: static;
+}
+
+.highlight-rail .overview-key .overview-metric-title {
+  position: static;
+  transform: none;
+}
+
+.highlight-rail.is-dragging,
+.design-figure-track.is-dragging {
+  scroll-snap-type: none;
+  user-select: none;
+  cursor: grabbing;
+}
+
+@media (pointer: fine) {
+  .highlight-rail:not(.is-dragging),
+  .design-figure-track:not(.is-dragging) { cursor: grab; }
+}
+
 @media (max-width: 760px){
   .compact-only{display:block}
 
-  /* Highlights: canvases are re-composed in JS for narrow screens; let them size naturally. */
-  .highlight-stage .hero-scene-area,
-  .highlight-stage[data-scene] .hero-scene-area{height:auto!important;aspect-ratio:auto!important;overflow:visible}
-  .highlight-stage .hero-panel{position:relative;inset:auto;height:auto}
-  .highlight-stage .hero-panel>canvas,
-  .wing-media>canvas{width:100%;height:auto!important;transform:none!important;object-fit:fill}
+  .highlights-band .highlight-stage .highlight-playback-row{min-height:23px}
+  .highlight-stage .hero-panel-summary{display:grid;place-content:center;margin-bottom:8px}
+  #overview-surface{aspect-ratio:1060 / 1322}
+  #airfoil-matrix-surface{aspect-ratio:750 / 1210}
+  #wing-canvas{aspect-ratio:1290 / 590}
+  .highlight-stage .highlight-rail .highlight-scene .overview-key{min-height:100px}
+  .highlight-rail .overview-key .overview-statistics {
+    grid-template-rows: auto auto;
+    gap: 7px;
+  }
+  .highlight-rail .overview-key .overview-metric-title {
+    grid-row: 1;
+    justify-self: center;
+  }
   #scene-airfoils{padding-top:6px}
   .scene-subset-note{margin:8px 0 0;text-align:center;font-size:13px;line-height:1.4;color:#6e6e73}
 
@@ -69,6 +150,7 @@
 /* carousel: tabs are the only navigation; no arrows, no peeking neighbour card */
 .design-nav-arrows{display:none!important}
 .design-figure-track{--card-edge:0px;grid-template-columns:repeat(3,100%)!important}
+.design-figure-track::after{content:none}
 
 /* hover vs tap hints */
 .hint-coarse{display:none}
