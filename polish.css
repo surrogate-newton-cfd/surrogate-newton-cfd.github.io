@@ -28,6 +28,7 @@
   flex-direction: column;
   min-width: 0;
   scroll-snap-align: start;
+  scroll-snap-stop: always;
 }
 
 .highlight-figure {
@@ -151,6 +152,7 @@
 .design-nav-arrows{display:none!important}
 .design-figure-track{--card-edge:0px;grid-template-columns:repeat(3,100%)!important}
 .design-figure-track::after{content:none}
+.design-result-figure{scroll-snap-stop:always}
 
 /* hover vs tap hints */
 .hint-coarse{display:none}
