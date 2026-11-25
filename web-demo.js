@@ -22,7 +22,10 @@
 
     const frame = document.createElement('iframe');
     frame.title = 'Surrogate–Newton CFD demo';
-    frame.src = demoLink.href;
+    // Request fresh Demo HTML even when an earlier iframe used the same page URL.
+    const embedUrl = new URL(demoLink.href);
+    embedUrl.searchParams.set('embed', Date.now().toString(36));
+    frame.src = embedUrl.href;
     frame.allow = 'fullscreen';
     frame.addEventListener('load', () => { status.hidden = true; }, { once: true });
     host.append(frame, status);
