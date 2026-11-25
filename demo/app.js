@@ -1,7 +1,9 @@
 "use strict";
 
-const COLORS = { surrogate: "#c66a2b", recovery: "#326a9a", reference: "#253543" };
-const STAGE_LABELS = { surrogate: "Surrogate", recovery: "Surrogate + NK", reference: "ADflow" };
+document.documentElement.classList.toggle("is-embedded", window.self !== window.top);
+
+const COLORS = { surrogate: "#447693", recovery: "#aa6b47", reference: "#56616a" };
+const STAGE_LABELS = { surrogate: "Surrogate", recovery: "Surrogate + NK", reference: "Cold-start CFD" };
 const NS = "http://www.w3.org/2000/svg";
 const DEFAULT_REYNOLDS_PER_MACH = 22132436.863567192;
 const JOB_POLL_INTERVAL_MS = 1000;
@@ -10,10 +12,11 @@ const DEFAULT_HANDLE_COUNT = 6;
 const MIN_HANDLE_COUNT = 3;
 const MAX_HANDLE_COUNT = 16;
 const ACTIVE_JOB_STORAGE_KEY = "surrogate-newton-active-job";
+const CASE_INPUTS = ["mach", "aoa", "surrogate-steps", "nk-stop-exponent"];
 const JOB_LABELS = {
   mesh: "Mesh generation and solver preparation",
   predict: "Surrogate prediction",
-  recover: "Newton–Krylov correction",
+  recover: "NK correction",
   reference: "Cold-start ADflow reference",
 };
 
@@ -22,7 +25,7 @@ const state = {
   uploadedGeometry: null, customGeometry: null, geometryMode: "existing",
   existingGeometry: null, selectedAirfoil: "local:rae2822", uiucCatalog: [], uiucSource: null,
   mesh: null, case: null, stages: {}, surrogateOnline: false, solverReady: false,
-  busy: false, drag: null, handleCount: DEFAULT_HANDLE_COUNT,
+  busy: false, caseRun: null, drag: null, handleCount: DEFAULT_HANDLE_COUNT,
   activeJobId: null, activeJobAction: null,
   reynoldsPerMach: DEFAULT_REYNOLDS_PER_MACH,
   mpiRanks: 8,
@@ -145,13 +148,19 @@ function setStageCard(stage, message, className) {
 function rememberActiveJob(job) {
   state.activeJobId = job.job_id;
   state.activeJobAction = job.action;
-  window.sessionStorage.setItem(ACTIVE_JOB_STORAGE_KEY, JSON.stringify({ jobId: job.job_id, action: job.action }));
+  const saved = {jobId: job.job_id, action: job.action};
+  if (state.caseRun) {
+    const {geometry, geometryMode, existingGeometry, customGeometry, uploadedGeometry, selectedAirfoil, mesh, handleCount} = state;
+    const inputs = Object.fromEntries(CASE_INPUTS.map((id) => [id, $(`#${id}`).value]));
+    saved.caseRun = {...state.caseRun, draft: {geometry, geometryMode, existingGeometry, customGeometry, uploadedGeometry, selectedAirfoil, mesh, handleCount, inputs}};
+  }
+  try { window.sessionStorage.setItem(ACTIVE_JOB_STORAGE_KEY, JSON.stringify(saved)); } catch { /* The open page can still poll. */ }
 }
 
 function forgetActiveJob() {
   state.activeJobId = null;
   state.activeJobAction = null;
-  window.sessionStorage.removeItem(ACTIVE_JOB_STORAGE_KEY);
+  try { window.sessionStorage.removeItem(ACTIVE_JOB_STORAGE_KEY); } catch { /* No browser storage. */ }
 }
 
 function updateJobPanel(job) {
@@ -161,7 +170,7 @@ function updateJobPanel(job) {
   $("#active-job-title").textContent = JOB_LABELS[job.action] || "Compute job";
   const cancelButton = $("#cancel-job");
   cancelButton.disabled = !["queued", "running"].includes(job.state) || job.cancel_requested;
-  cancelButton.textContent = job.cancel_requested ? "Cancellation requested" : "Cancel job";
+  cancelButton.textContent = job.cancel_requested ? "Cancellation requested" : (state.caseRun ? "Cancel run" : "Cancel job");
   if (job.state === "queued") {
     $("#active-job-detail").textContent = "Waiting for the single compute worker.";
     $("#active-job-position").textContent = job.queue_position
@@ -231,6 +240,10 @@ async function runQueuedJob(action, payload) {
 
 async function cancelActiveJob() {
   if (!state.activeJobId) return;
+  if (state.caseRun) {
+    state.caseRun.stopRequested = true;
+    rememberActiveJob({job_id: state.activeJobId, action: state.activeJobAction});
+  }
   const button = $("#cancel-job");
   button.disabled = true;
   try {
@@ -470,6 +483,9 @@ function updateEnabledState() {
   $("#coordinate-file").disabled = state.busy;
   $("#handle-count").disabled = state.busy;
   $("#reset-geometry").disabled = state.busy;
+  for (const id of [...CASE_INPUTS, "mach-range", "aoa-range"]) $(`#${id}`).disabled = state.busy;
+  $("#run-case").disabled = state.busy || !state.geometry || !state.solverReady || !state.surrogateOnline;
+  $("#run-case").textContent = state.caseRun ? "Running case…" : "Run case";
   $("#mesh-button").disabled = state.busy || !state.geometry || !state.solverReady;
   $("#predict-button").disabled = state.busy || !state.geometry || !state.mesh || !state.surrogateOnline;
   $("#recover-button").disabled = state.busy || !state.case?.stage;
@@ -546,11 +562,11 @@ function syncCase(payload, { replace = false } = {}) {
   setStageCard("recovery", recoveryState, merged.recovery ? (merged.recovery.converged ? "complete" : "stopped") : "active");
   setStageCard("reference", merged.reference ? (merged.reference.converged ? "Converged" : `Stopped · ${merged.reference.termination || "target not reached"}`) : "Optional", merged.reference ? (merged.reference.converged ? "complete" : "stopped") : "");
   updateEnabledState(); renderResults();
-  if ($("#field-channel").value !== "pressure") void ensureFieldChannel();
+  if (!["cp", "pressure"].includes($("#field-channel").value)) void ensureFieldChannel();
 }
 
 async function ensureFieldChannel(channelKey = $("#field-channel").value) {
-  if (!state.case?.case_id || channelKey === "pressure") {
+  if (!state.case?.case_id || channelKey === "pressure" || channelKey === "cp") {
     renderFields();
     return;
   }
@@ -728,21 +744,14 @@ function renderCf() {
   legend.append(separator, legendItem("Upper surface", "#65717c"), legendItem("Lower surface", "#65717c", { dashed: true }));
 }
 
-function interpolateColorChannels(value, stops) {
-  const clamped = Math.max(0, Math.min(0.999, value)); const scaled = clamped * (stops.length - 1); const index = Math.floor(scaled); const ratio = scaled - index;
-  return stops[index].map((channel, channelIndex) => channel + ratio * (stops[Math.min(index + 1, stops.length - 1)][channelIndex] - channel));
-}
-function interpolateColor(value, stops) { return `rgb(${interpolateColorChannels(value, stops).map(Math.round).join(",")})`; }
 const FIELD_COLOR_STOPS = [[24, 62, 115], [65, 142, 183], [107, 184, 213], [238, 228, 185], [232, 119, 60], [158, 38, 53]];
 const ERROR_COLOR_STOPS = [[255, 252, 245], [254, 224, 168], [245, 150, 99], [206, 73, 112], [111, 31, 123]];
-const colorMap = (value) => interpolateColor(value, FIELD_COLOR_STOPS); colorMap.stops = FIELD_COLOR_STOPS;
-const errorColorMap = (value) => interpolateColor(value, ERROR_COLOR_STOPS); errorColorMap.stops = ERROR_COLOR_STOPS;
 
 function drawAirfoil(context, mapX, mapY) {
   if (!state.geometry) return;
   context.beginPath(); state.geometry.x.forEach((x, index) => index === 0 ? context.moveTo(mapX(x), mapY(state.geometry.upper[index])) : context.lineTo(mapX(x), mapY(state.geometry.upper[index])));
   for (let index = state.geometry.x.length - 1; index >= 0; index -= 1) context.lineTo(mapX(state.geometry.x[index]), mapY(state.geometry.lower[index]));
-  context.closePath(); context.fillStyle = "#ffffff"; context.strokeStyle = "#1d2c38"; context.lineWidth = 1.1; context.fill(); context.stroke();
+  context.closePath(); context.fillStyle = "#ffffff"; context.strokeStyle = "#1d1d1f"; context.lineWidth = 1.1; context.fill(); context.stroke();
 }
 
 function compileFieldShader(gl, type, source) {
@@ -761,100 +770,245 @@ function scheduleFields() {
   window.requestAnimationFrame(() => { fieldFramePending = false; renderFields(); });
 }
 
-function drawContinuousField(fieldLayer, field, range, values, colorStops) {
-  const gl = fieldLayer.getContext("webgl", { antialias: true, alpha: false, preserveDrawingBuffer: true });
-  if (!gl) return false;
-  if (gl.isContextLost()) return false;
+function fieldNodeValues(field, values) {
+  const cached = fieldNodes.get(values);
+  if (cached) return cached;
+  const result = new Float64Array(field.x.length);
+  const weights = new Uint8Array(result.length);
+  const stride = field.node_width;
+  for (let row = 0; row < field.height; row += 1) {
+    for (let column = 0; column < field.width; column += 1) {
+      const value = Number(values[row * field.width + column]);
+      const node = row * stride + column;
+      for (const index of [node, node + 1, node + stride, node + stride + 1]) {
+        result[index] += value;
+        weights[index] += 1;
+      }
+    }
+  }
+  for (let index = 0; index < result.length; index += 1) result[index] /= Math.max(1, weights[index]);
+  fieldNodes.set(values, result);
+  return result;
+}
+
+function drawContinuousField(fieldLayer, field, range, values, stops, contourPixelScale) {
+  const gl = fieldLayer.getContext("webgl", {antialias: true, alpha: false, preserveDrawingBuffer: true});
+  if (!gl || gl.isContextLost()) return false;
   let renderer = fieldPrograms.get(fieldLayer);
   if (!renderer) {
-    const vertexShader = compileFieldShader(gl, gl.VERTEX_SHADER, "attribute vec2 a_position; attribute vec3 a_color; varying vec3 v_color; void main(){ gl_Position=vec4(a_position,0.0,1.0); v_color=a_color; }");
-    const fragmentShader = compileFieldShader(gl, gl.FRAGMENT_SHADER, "precision mediump float; varying vec3 v_color; void main(){ gl_FragColor=vec4(v_color,1.0); }");
-    const program = gl.createProgram(); gl.attachShader(program, vertexShader); gl.attachShader(program, fragmentShader); gl.linkProgram(program);
-    gl.deleteShader(vertexShader); gl.deleteShader(fragmentShader);
-    if (!gl.getProgramParameter(program, gl.LINK_STATUS)) { gl.deleteProgram(program); return false; }
-    renderer = {program, buffer: gl.createBuffer(), position: gl.getAttribLocation(program, "a_position"), color: gl.getAttribLocation(program, "a_color")};
+    const contoursSupported = !!gl.getExtension("OES_standard_derivatives");
+    const vertexShader = compileFieldShader(gl, gl.VERTEX_SHADER, `
+      attribute vec2 a_position;
+      attribute float a_value;
+      varying float value;
+      void main() {
+        gl_Position = vec4(a_position, 0.0, 1.0);
+        value = a_value;
+      }`);
+    const fragmentShader = compileFieldShader(gl, gl.FRAGMENT_SHADER, `${contoursSupported ? "#extension GL_OES_standard_derivatives : enable" : ""}
+      precision highp float;
+      varying float value;
+      uniform sampler2D palette;
+      uniform float whiteAnchor;
+      uniform vec2 limits;
+      uniform float contourPixelScale;
+      ${contoursSupported ? FIELD_DISPLAY.contourShader : ""}
+      void main() {
+        float u = (clamp(value, 0.0, 1.0) * 1023.0 + 0.5) / 1024.0;
+        vec3 fill = abs(value - whiteAnchor) < 1e-7 ? vec3(1.0) : texture2D(palette, vec2(u, 0.5)).rgb;
+        ${contoursSupported ? "if (contourPixelScale > 0.0) fill = withCpContours(fill, mix(limits.x, limits.y, value), contourPixelScale);" : ""}
+        gl_FragColor = vec4(fill, 1.0);
+      }`);
+    const program = gl.createProgram();
+    gl.attachShader(program, vertexShader);
+    gl.attachShader(program, fragmentShader);
+    gl.linkProgram(program);
+    gl.deleteShader(vertexShader);
+    gl.deleteShader(fragmentShader);
+    if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+      gl.deleteProgram(program);
+      return false;
+    }
+    const texture = gl.createTexture();
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    renderer = {
+      program, texture, buffer: gl.createBuffer(),
+      position: gl.getAttribLocation(program, "a_position"),
+      value: gl.getAttribLocation(program, "a_value"),
+      palette: gl.getUniformLocation(program, "palette"),
+      whiteAnchor: gl.getUniformLocation(program, "whiteAnchor"),
+      contoursSupported, limits: gl.getUniformLocation(program, "limits"),
+      contourPixelScale: gl.getUniformLocation(program, "contourPixelScale"),
+    };
     fieldPrograms.set(fieldLayer, renderer);
   }
-  const {program, buffer, position, color} = renderer;
-  gl.useProgram(program); gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
-  if (renderer.field !== field || renderer.values !== values || renderer.minimum !== range[0] || renderer.maximum !== range[1] || renderer.colorStops !== colorStops) {
-    const nodeCount = field.node_height * field.node_width;
-    const nodeAt = (i, j) => i * field.node_width + j; const cellAt = (i, j) => i * field.width + j;
-    let nodeValues = fieldNodes.get(values);
-    if (!nodeValues) {
-      const nodeSums = new Float64Array(nodeCount); const nodeWeights = new Uint8Array(nodeCount);
-      for (let i = 0; i < field.height; i += 1) {
-        for (let j = 0; j < field.width; j += 1) {
-          const value = Number(values[cellAt(i, j)]);
-          [nodeAt(i, j), nodeAt(i, j + 1), nodeAt(i + 1, j + 1), nodeAt(i + 1, j)].forEach((index) => { nodeSums[index] += value; nodeWeights[index] += 1; });
-        }
-      }
-      nodeValues = new Float64Array(nodeCount);
-      for (let index = 0; index < nodeCount; index += 1) nodeValues[index] = nodeSums[index] / Math.max(1, nodeWeights[index]);
-
-      fieldNodes.set(values, nodeValues);
+  if (contourPixelScale && !renderer.contoursSupported) return false;
+  const {program, buffer, position, value, texture, palette, whiteAnchor} = renderer;
+  const [low, high] = range;
+  const rangeChanged = renderer.minimum !== low || renderer.maximum !== high;
+  gl.useProgram(program);
+  if (renderer.contoursSupported) {
+    gl.uniform2f(renderer.limits, low, high);
+    gl.uniform1f(renderer.contourPixelScale, contourPixelScale);
+  }
+  gl.activeTexture(gl.TEXTURE0);
+  gl.bindTexture(gl.TEXTURE_2D, texture);
+  if (rangeChanged || renderer.stops !== stops) {
+    const table = new Uint8ClampedArray(1024 * 4);
+    for (let index = 0; index < 1024; index += 1) {
+      const rgb = FIELD_DISPLAY.colour(low + (high - low) * index / 1023, stops);
+      table.set([...rgb, 255], 4 * index);
     }
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1024, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array(table.buffer));
+    gl.uniform1i(palette, 0);
+    const hasWhiteZero = stops.some(([anchor, r, g, b]) => anchor === 0 && r === 255 && g === 255 && b === 255);
+    gl.uniform1f(whiteAnchor, hasWhiteZero && low <= 0 && high >= 0 ? -low / (high - low) : -1e20);
+    renderer.stops = stops;
+  }
+  gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+  if (renderer.field !== field || renderer.values !== values || rangeChanged) {
+    const nodeAt = (i, j) => i * field.node_width + j;
+    const nodeValues = fieldNodeValues(field, values);
 
-    const [pMin, pMax] = range; const xMin = -0.2; const xMax = 1.2; const yMin = -0.35; const yMax = 0.35;
-    const vertices = new Float32Array(field.height * field.width * 6 * 5); let offset = 0;
+    const {xMin, xMax, yMin, yMax} = FIELD_DISPLAY.bounds;
+    const vertices = new Float32Array(field.height * field.width * 18);
+    let offset = 0;
     const appendNode = (index) => {
-      const x = Number(field.x[index]); const y = Number(field.y[index]);
-      const color = interpolateColorChannels((nodeValues[index] - pMin) / (pMax - pMin || 1), colorStops);
-      vertices[offset++] = 2 * (x - xMin) / (xMax - xMin) - 1;
-      vertices[offset++] = 2 * (y - yMin) / (yMax - yMin) - 1;
-      vertices[offset++] = color[0] / 255; vertices[offset++] = color[1] / 255; vertices[offset++] = color[2] / 255;
+      vertices[offset++] = 2 * (field.x[index] - xMin) / (xMax - xMin) - 1;
+      vertices[offset++] = 2 * (field.y[index] - yMin) / (yMax - yMin) - 1;
+      vertices[offset++] = (nodeValues[index] - low) / (high - low);
     };
     for (let i = 0; i < field.height; i += 1) {
       for (let j = 0; j < field.width; j += 1) {
-        const n0 = nodeAt(i, j); const n1 = nodeAt(i, j + 1); const n2 = nodeAt(i + 1, j + 1); const n3 = nodeAt(i + 1, j);
+        const n0 = nodeAt(i, j);
+        const n1 = nodeAt(i, j + 1);
+        const n2 = nodeAt(i + 1, j + 1);
+        const n3 = nodeAt(i + 1, j);
         [n0, n1, n2, n0, n2, n3].forEach(appendNode);
       }
     }
     gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
-    Object.assign(renderer, {field, values, minimum: range[0], maximum: range[1], colorStops, count: vertices.length / 5});
+    Object.assign(renderer, {field, values, minimum: low, maximum: high, count: vertices.length / 3});
   }
-  gl.viewport(0, 0, fieldLayer.width, fieldLayer.height); gl.clearColor(242 / 255, 244 / 255, 246 / 255, 1); gl.clear(gl.COLOR_BUFFER_BIT);
-  gl.enableVertexAttribArray(position); gl.vertexAttribPointer(position, 2, gl.FLOAT, false, 20, 0);
-  gl.enableVertexAttribArray(color); gl.vertexAttribPointer(color, 3, gl.FLOAT, false, 20, 8);
+  gl.viewport(0, 0, fieldLayer.width, fieldLayer.height);
+  gl.clearColor(1, 1, 1, 1);
+  gl.clear(gl.COLOR_BUFFER_BIT);
+  gl.enableVertexAttribArray(position);
+  gl.vertexAttribPointer(position, 2, gl.FLOAT, false, 12, 0);
+  gl.enableVertexAttribArray(value);
+  gl.vertexAttribPointer(value, 1, gl.FLOAT, false, 12, 8);
   gl.drawArrays(gl.TRIANGLES, 0, renderer.count);
   return true;
 }
 
-function drawFlatFieldFallback(fieldContext, field, range, values, mapColor, mapX, mapY) {
-  const [pMin, pMax] = range; const nodeAt = (i, j) => i * field.node_width + j; const cellAt = (i, j) => i * field.width + j;
+function drawFlatFieldFallback(context, field, limits, values, stops, mapX, mapY) {
+  const [low, high] = limits;
+  const nodeAt = (i, j) => i * field.node_width + j;
+  const cellAt = (i, j) => i * field.width + j;
   for (let i = field.height - 1; i >= 0; i -= 1) for (let j = 0; j < field.width; j += 1) {
     const indices = [nodeAt(i, j), nodeAt(i, j + 1), nodeAt(i + 1, j + 1), nodeAt(i + 1, j)];
-    fieldContext.beginPath(); fieldContext.moveTo(mapX(Number(field.x[indices[0]])), mapY(Number(field.y[indices[0]])));
-    for (let point = 1; point < 4; point += 1) fieldContext.lineTo(mapX(Number(field.x[indices[point]])), mapY(Number(field.y[indices[point]])));
-    fieldContext.closePath(); fieldContext.fillStyle = mapColor((Number(values[cellAt(i, j)]) - pMin) / (pMax - pMin || 1)); fieldContext.fill();
+    context.beginPath();
+    context.moveTo(mapX(field.x[indices[0]]), mapY(field.y[indices[0]]));
+    for (const index of indices.slice(1)) context.lineTo(mapX(field.x[index]), mapY(field.y[index]));
+    context.closePath();
+    const value = Math.min(high, Math.max(low, values[cellAt(i, j)]));
+    context.fillStyle = `rgb(${FIELD_DISPLAY.colour(value, stops).map(Math.round).join(",")})`;
+    context.fill();
   }
 }
 
-function drawPressureField(canvas, field, range, values, mapColor = colorMap) {
-  const ratio = window.devicePixelRatio || 1; const rect = canvas.getBoundingClientRect();
-  const width = Math.max(1, Math.round(rect.width * ratio)); const height = Math.max(1, Math.round(rect.height * ratio));
+function drawCpContours(context, field, values, mapX, mapY) {
+  const {interval, rgb, opacity} = FIELD_DISPLAY.cpContours;
+  const nodes = fieldNodeValues(field, values);
+  const stride = field.node_width;
+
+  function traceTriangle(triangle) {
+    const levels = triangle.map((index) => nodes[index] / interval);
+    const first = Math.floor(Math.min(...levels)) + 1;
+    const last = Math.floor(Math.max(...levels));
+    if (!Number.isSafeInteger(first) || !Number.isSafeInteger(last) || last - first > 64) return;
+    for (let contour = first; contour <= last; contour += 1) {
+      let count = 0;
+      for (let edge = 0; edge < 3; edge += 1) {
+        const following = (edge + 1) % 3;
+        const from = levels[edge];
+        const to = levels[following];
+        if ((from < contour) === (to < contour)) continue;
+        const weight = (contour - from) / (to - from);
+        const a = triangle[edge];
+        const b = triangle[following];
+        const x = mapX(field.x[a] + (field.x[b] - field.x[a]) * weight);
+        const y = mapY(field.y[a] + (field.y[b] - field.y[a]) * weight);
+        if (count === 0) context.moveTo(x, y);
+        else context.lineTo(x, y);
+        count += 1;
+      }
+    }
+  }
+
+  context.save();
+  context.strokeStyle = `rgba(${rgb.join(",")}, ${opacity})`;
+  context.lineWidth = 0.8;
+  context.beginPath();
+  for (let row = 0; row < field.height; row += 1) {
+    for (let column = 0; column < field.width; column += 1) {
+      const node = row * stride + column;
+      traceTriangle([node, node + 1, node + stride + 1]);
+      traceTriangle([node, node + stride + 1, node + stride]);
+    }
+  }
+  context.stroke();
+  context.restore();
+}
+
+function drawFlowField(canvas, field, {limits, stops, paletteKey}, values) {
+  const ratio = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+  const width = Math.max(1, Math.round(rect.width * ratio));
+  const height = Math.max(1, Math.round(rect.height * ratio));
   let renderer = fieldRenderers.get(canvas);
   if (!renderer) {
     const layer = document.createElement("canvas");
-    renderer = {layer}; fieldRenderers.set(canvas, renderer);
-    layer.addEventListener("webglcontextlost", (event) => { event.preventDefault(); renderer.values = null; fieldPrograms.delete(layer); scheduleFields(); });
+    renderer = {layer};
+    fieldRenderers.set(canvas, renderer);
+    layer.addEventListener("webglcontextlost", (event) => {
+      event.preventDefault();
+      renderer.values = null;
+      fieldPrograms.delete(layer);
+      scheduleFields();
+    });
     layer.addEventListener("webglcontextrestored", () => { renderer.values = null; scheduleFields(); });
   }
-  if (renderer.values === values && renderer.field === field && renderer.minimum === range[0] && renderer.maximum === range[1]
-      && renderer.mapColor === mapColor && renderer.geometry === state.geometry && canvas.width === width && canvas.height === height) return;
+  const [minimum, maximum] = limits;
+  if (renderer.values === values && renderer.field === field && renderer.minimum === minimum && renderer.maximum === maximum
+      && renderer.paletteKey === paletteKey && renderer.geometry === state.geometry && canvas.width === width && canvas.height === height) return;
   if (canvas.width !== width) canvas.width = width;
   if (canvas.height !== height) canvas.height = height;
-  const context = canvas.getContext("2d"); context.setTransform(ratio, 0, 0, ratio, 0, 0); context.fillStyle = "#f2f4f6"; context.fillRect(0, 0, rect.width, rect.height);
+  const context = canvas.getContext("2d");
+  context.setTransform(ratio, 0, 0, ratio, 0, 0);
+  context.fillStyle = "#ffffff";
+  context.fillRect(0, 0, rect.width, rect.height);
   const fieldLayer = renderer.layer;
   if (fieldLayer.width !== width) fieldLayer.width = width;
   if (fieldLayer.height !== height) fieldLayer.height = height;
-  const xMin = -0.2; const xMax = 1.2; const yMin = -0.35; const yMax = 0.35;
-  const mapX = (value) => ((value - xMin) / (xMax - xMin)) * rect.width; const mapY = (value) => rect.height - ((value - yMin) / (yMax - yMin)) * rect.height;
+  const {xMin, xMax, yMin, yMax} = FIELD_DISPLAY.bounds;
+  const mapX = (value) => ((value - xMin) / (xMax - xMin)) * rect.width;
+  const mapY = (value) => rect.height - ((value - yMin) / (yMax - yMin)) * rect.height;
+  const showContours = paletteKey === "cp";
   let continuous = false;
-  try { continuous = drawContinuousField(fieldLayer, field, range, values, mapColor.stops || FIELD_COLOR_STOPS); } catch (_error) { continuous = false; }
-  if (continuous) context.drawImage(fieldLayer, 0, 0, rect.width, rect.height);
-  else drawFlatFieldFallback(context, field, range, values, mapColor, mapX, mapY);
-  Object.assign(renderer, {values, field, minimum: range[0], maximum: range[1], mapColor, geometry: state.geometry});
+  try { continuous = drawContinuousField(fieldLayer, field, limits, values, stops, showContours ? ratio : 0); } catch { /* Use the 2D fallback. */ }
+  if (continuous) {
+    context.drawImage(fieldLayer, 0, 0, rect.width, rect.height);
+  } else {
+    drawFlatFieldFallback(context, field, limits, values, stops, mapX, mapY);
+    if (showContours) drawCpContours(context, field, values, mapX, mapY);
+  }
+  Object.assign(renderer, {values, field, minimum, maximum, paletteKey, geometry: state.geometry});
   drawAirfoil(context, mapX, mapY);
 }
 
@@ -862,65 +1016,151 @@ function percentile(values, fraction) {
   const sorted = values.slice().sort((a, b) => a - b); return sorted[Math.min(sorted.length - 1, Math.floor(fraction * (sorted.length - 1)))];
 }
 
-function channelData(field, key) { return field.channels[key]; }
+const cpChannels = new WeakMap();
+function displayedChannel(field, key) {
+  const source = field?.channels?.[key === "cp" ? "pressure" : key];
+  if (!source || key !== "cp") return source;
+  const q = FIELD_DISPLAY.dynamicPressureScale(Number(state.case?.flow?.mach));
+  if (!Number.isFinite(q) || q <= 0) return undefined;
+  if (cpChannels.get(source)?.q !== q) {
+    cpChannels.set(source, {q, values: source.values.map((pressure) => (pressure - 1) / q)});
+  }
+  return cpChannels.get(source);
+}
 
-function configuredRange(autoRange, minimumSelector, maximumSelector) {
-  const minimumInput = $(minimumSelector); const maximumInput = $(maximumSelector);
-  const minimum = minimumInput.value === "" ? autoRange[0] : Number(minimumInput.value);
-  const maximum = maximumInput.value === "" ? autoRange[1] : Number(maximumInput.value);
-  const valid = Number.isFinite(minimum) && Number.isFinite(maximum) && minimum < maximum;
-  minimumInput.setCustomValidity(valid ? "" : "Minimum must be smaller than maximum.");
-  maximumInput.setCustomValidity(valid ? "" : "Maximum must be larger than minimum.");
-  return valid ? [minimum, maximum] : autoRange;
+function scaleInputs(prefix) {
+  return [$(`#${prefix}-scale-min`), $(`#${prefix}-scale-max`)];
+}
+
+const savedScaleInputs = new Map();
+function scaleInputKey(prefix) {
+  const channel = $("#field-channel").value;
+  if (prefix !== "error" || channel !== "cp") return `${prefix}:${channel}`;
+  return `error:cp:${$("#cp-error-mode").value}`;
+}
+
+function rememberScaleInputs(prefix) {
+  savedScaleInputs.set(scaleInputKey(prefix), scaleInputs(prefix).map((input) => input.value));
+}
+
+function restoreScaleInputs(prefix) {
+  const values = savedScaleInputs.get(scaleInputKey(prefix)) ?? ["", ""];
+  scaleInputs(prefix).forEach((input, index) => { input.value = values[index]; });
+}
+
+function configuredRange(defaultRange, prefix) {
+  const inputs = scaleInputs(prefix);
+  const range = inputs.map((input, index) => input.value === "" ? defaultRange[index] : Number(input.value));
+  const valid = range.every(Number.isFinite) && range[0] < range[1];
+  inputs[0].setCustomValidity(valid ? "" : "Minimum must be smaller than maximum.");
+  inputs[1].setCustomValidity(valid ? "" : "Maximum must be larger than minimum.");
+  return valid ? range : defaultRange;
+}
+
+function configureScaleControls(prefix, standardScale, automaticMinimum = "Auto") {
+  const [low, high] = scaleInputs(prefix);
+  low.placeholder = standardScale ? String(standardScale.limits[0]).replace("-", "−") : automaticMinimum;
+  high.placeholder = standardScale ? String(standardScale.limits[1]) : "Auto";
+  $(`#${prefix}-scale-auto`).textContent = standardScale ? "Use standard scale" : "Use automatic limits";
+}
+
+function fieldDisplay(prefix, defaultRange, title, paletteKey, standardScale, colors) {
+  const limits = configuredRange(defaultRange, prefix);
+  const stops = standardScale ? FIELD_DISPLAY.signedStops(standardScale, limits) : FIELD_DISPLAY.uniformStops(colors, limits);
+  const ticks = standardScale ? FIELD_DISPLAY.rangeTicks(standardScale, limits) : limits;
+  return {title, limits, stops, ticks, paletteKey};
+}
+
+function updateColorbar(selector, display) {
+  const legend = $(selector);
+  legend.hidden = !display;
+  if (display) FIELD_DISPLAY.drawColorbar(legend, display);
 }
 
 function meanSquaredError(values) {
-  return values.reduce((sum, value) => sum + Number(value) ** 2, 0) / values.length;
+  return values.reduce((sum, value) => sum + value ** 2, 0) / values.length;
 }
 
 let fieldErrorCache = null;
-function renderFields() {
-  const channelKey = $("#field-channel").value;
-  const channelLabel = $("#field-channel").selectedOptions[0].textContent;
-  const available = Object.entries(state.stages).filter(([, stage]) => stage.field?.channels?.[channelKey]); const colorbar = $("#shared-colorbar"); colorbar.hidden = available.length === 0;
-  $("#field-title").textContent = `${channelLabel} fields`;
-  let sharedRange = [0, 1];
-  if (available.length) {
-    const autoRange = [Math.min(...available.map(([, stage]) => Number(channelData(stage.field, channelKey).range[0]))), Math.max(...available.map(([, stage]) => Number(channelData(stage.field, channelKey).range[1])))];
-    sharedRange = configuredRange(autoRange, "#field-scale-min", "#field-scale-max");
-    $("#color-min").textContent = formatNumber(sharedRange[0], 3); $("#color-max").textContent = formatNumber(sharedRange[1], 3);
+function renderFieldErrors(channels, channelKey, channelLabel) {
+  const surrogate = channels.surrogate?.values;
+  const reference = channels.reference?.values;
+  const recovery = channels.recovery?.values;
+  $("#error-section").hidden = !(reference && surrogate);
+  if (!reference || !surrogate) {
+    fieldErrorCache = null;
+    return;
   }
-  ["surrogate", "recovery", "reference"].forEach((key) => {
-    const canvas = $(`#field-${key}`); const empty = $(`#field-${key}-empty`); const field = state.stages[key]?.field;
-    const hasChannel = Boolean(field?.channels?.[channelKey]);
-    canvas.hidden = !hasChannel; empty.hidden = hasChannel; if (hasChannel) drawPressureField(canvas, field, sharedRange, channelData(field, channelKey).values);
-  });
-  const reference = state.stages.reference?.field?.channels?.[channelKey] ? state.stages.reference.field : null;
-  const surrogate = state.stages.surrogate?.field?.channels?.[channelKey] ? state.stages.surrogate.field : null;
-  const recovery = state.stages.recovery?.field?.channels?.[channelKey] ? state.stages.recovery.field : null;
-  const showErrors = Boolean(reference && surrogate); $("#error-section").hidden = !showErrors;
-  if (!showErrors) return;
-  $("#error-title").textContent = `Absolute ${channelLabel.toLowerCase()} error against ADflow`;
-  const referenceValues = channelData(reference, channelKey).values;
-  const surrogateValues = channelData(surrogate, channelKey).values;
-  const recoveryValues = recovery ? channelData(recovery, channelKey).values : null;
-  if (!fieldErrorCache || fieldErrorCache.reference !== referenceValues || fieldErrorCache.surrogate !== surrogateValues || fieldErrorCache.recovery !== recoveryValues) {
-    const surrogateError = surrogateValues.map((value, index) => Math.abs(Number(value) - Number(referenceValues[index])));
-    const recoveryError = recoveryValues ? recoveryValues.map((value, index) => Math.abs(Number(value) - Number(referenceValues[index]))) : null;
+
+  const isCp = channelKey === "cp";
+  const signed = isCp && $("#cp-error-mode").value === "signed";
+  const standardScale = signed ? FIELD_DISPLAY.cpError : null;
+  $("#cp-error-options").hidden = !isCp;
+  $("#error-title").textContent = signed ? "Signed pressure coefficient error" : "Absolute error";
+  $("#error-description").textContent = signed
+    ? "Field minus cold-start CFD."
+    : `Magnitude of the difference in ${channelLabel.toLowerCase()} from cold-start CFD.`;
+  configureScaleControls("error", null, signed ? "Auto" : "0");
+
+  if (!fieldErrorCache || fieldErrorCache.reference !== reference || fieldErrorCache.surrogate !== surrogate
+      || fieldErrorCache.recovery !== recovery || fieldErrorCache.signed !== signed) {
+    const differences = (values) => values?.map((value, index) => {
+      const delta = value - reference[index];
+      return signed ? delta : Math.abs(delta);
+    });
+    const surrogateError = differences(surrogate);
+    const recoveryError = differences(recovery);
     const combined = recoveryError ? surrogateError.concat(recoveryError) : surrogateError;
-    fieldErrorCache = {reference: referenceValues, surrogate: surrogateValues, recovery: recoveryValues, surrogateError, recoveryError,
-      autoErrorRange: [0, Math.max(1e-12, percentile(combined, 0.99))]};
+    const halfRange = Math.max(1e-12, percentile(signed ? combined.map(Math.abs) : combined, 0.99));
+    const defaultRange = [signed ? -halfRange : 0, halfRange];
+    fieldErrorCache = {reference, surrogate, recovery, signed, surrogateError, recoveryError, defaultRange};
   }
-  const {surrogateError, recoveryError, autoErrorRange} = fieldErrorCache;
-  const errorRange = configuredRange(autoErrorRange, "#error-scale-min", "#error-scale-max");
-  $("#error-min").textContent = formatNumber(errorRange[0], 3); $("#error-max").textContent = formatNumber(errorRange[1], 3);
-  drawPressureField($("#error-surrogate"), surrogate, errorRange, surrogateError, errorColorMap);
+
+  const {surrogateError, recoveryError, defaultRange} = fieldErrorCache;
+  const title = standardScale?.title ?? (isCp ? "Absolute error, |ΔCₚ|" : "Absolute error");
+  const display = fieldDisplay("error", defaultRange, title, signed ? "signed-cp" : "absolute", standardScale, ERROR_COLOR_STOPS);
+  drawFlowField($("#error-surrogate"), state.stages.surrogate.field, display, surrogateError);
   $("#surrogate-error-mse").textContent = `(MSE ${formatNumber(meanSquaredError(surrogateError), 6)})`;
-  const recoveryCanvas = $("#error-recovery"); recoveryCanvas.parentElement.parentElement.hidden = !recovery;
-  if (recovery) {
-    drawPressureField(recoveryCanvas, recovery, errorRange, recoveryError, errorColorMap);
+  const recoveryCanvas = $("#error-recovery");
+  recoveryCanvas.closest("figure").hidden = !recoveryError;
+  if (recoveryError) {
+    drawFlowField(recoveryCanvas, state.stages.recovery.field, display, recoveryError);
     $("#recovery-error-mse").textContent = `(MSE ${formatNumber(meanSquaredError(recoveryError), 6)})`;
   }
+  updateColorbar("#error-colorbar", display);
+}
+
+function renderFields() {
+  const selector = $("#field-channel");
+  const channelKey = selector.value;
+  const name = selector.selectedOptions[0].textContent;
+  const cpView = channelKey === "cp";
+  const channelLabel = cpView ? "Pressure coefficient" : channelKey === "pressure" ? "Pressure ratio" : name;
+  const standardScale = cpView ? FIELD_DISPLAY.cp : null;
+  $("#field-title").textContent = `${channelLabel} fields`;
+  configureScaleControls("field", standardScale);
+
+  const channels = Object.fromEntries(Object.entries(state.stages).map(([key, stage]) => [key, displayedChannel(stage.field, channelKey)]));
+  const available = Object.values(channels).filter(Boolean);
+  let display;
+  if (available.length) {
+    const defaultRange = standardScale?.limits ?? [
+      Math.min(...available.map(({range}) => range[0])),
+      Math.max(...available.map(({range}) => range[1])),
+    ];
+    const [low, high] = defaultRange;
+    const limits = high > low ? defaultRange : [low, low + Math.max(1, Math.abs(low)) * 1e-6];
+    display = fieldDisplay("field", limits, name, cpView ? "cp" : "sequential", standardScale, FIELD_COLOR_STOPS);
+  }
+  for (const key of Object.keys(STAGE_LABELS)) {
+    const canvas = $(`#field-${key}`);
+    const channel = channels[key];
+    canvas.hidden = !channel;
+    $(`#field-${key}-empty`).hidden = !!channel;
+    if (channel) drawFlowField(canvas, state.stages[key].field, display, channel.values);
+  }
+  updateColorbar("#shared-colorbar", display);
+  renderFieldErrors(channels, channelKey, channelLabel);
 }
 
 function stageWallTime(key, stage) {
@@ -977,20 +1217,30 @@ function renderMetrics() {
 function renderResults() { renderCp(); renderCf(); renderMetrics(); renderFields(); }
 
 async function loadRuntime() {
+  const element = $("#system-status");
+  const label = element.querySelector("span:last-child");
   try {
     const status = await api("/api/status"); state.surrogateOnline = Boolean(status.surrogate_online); state.solverReady = Boolean(status.solver_ready); state.mpiRanks = Number(status.resources?.cpu_ranks_per_case || 8);
     state.reynoldsPerMach = Number(status.resources?.reference_state?.reynolds) || DEFAULT_REYNOLDS_PER_MACH;
     syncReferenceState();
     syncMethodLabels();
-    const element = $("#system-status"); element.dataset.state = status.surrogate_online && status.solver_ready ? "online" : "offline";
+    const online = state.surrogateOnline && state.solverReady;
+    element.dataset.state = online ? "online" : "offline";
     const queued = Number(status.scheduler?.queue_depth || 0);
-    element.querySelector("span:last-child").textContent = status.surrogate_online
+    label.textContent = online
       ? `Surrogate ready${status.prewarm ? " · runtime prewarmed" : ""}${queued ? ` · ${queued} queued` : ""}`
-      : "Surrogate service offline";
-    if (!status.surrogate_online) setMessage("Geometry editing is available, but the local Surrogate service is offline.", true);
+      : "Demo offline";
+    if (!online) setMessage("Demo offline", true);
     updateEnabledState();
-  } catch (error) {
-    $("#system-status").dataset.state = "offline"; $("#system-status span:last-child").textContent = "Runtime unavailable"; setMessage(error.message, true);
+    return true;
+  } catch {
+    state.surrogateOnline = false;
+    state.solverReady = false;
+    element.dataset.state = "offline";
+    label.textContent = "Demo offline";
+    setMessage("Demo offline", true);
+    updateEnabledState();
+    return false;
   }
 }
 
@@ -1104,63 +1354,98 @@ function applyMeshResult(payload) {
   $("#mesh-status").textContent = `${shape} · ${Number(payload.cell_count || 25536).toLocaleString()} cells · mesh ${payload.mesh_wall_sec.toFixed(2)} s · ADflow preparation ${payload.adflow_prepare_wall_sec.toFixed(2)} s · MPI ${payload.mpi_ranks}`;
 }
 
-async function resumeActiveJob() {
-  let saved;
-  try {
-    saved = JSON.parse(window.sessionStorage.getItem(ACTIVE_JOB_STORAGE_KEY) || "null");
-  } catch (_error) {
-    window.sessionStorage.removeItem(ACTIVE_JOB_STORAGE_KEY);
-    return;
-  }
-  if (!saved?.jobId || !saved?.action) return;
-  state.activeJobId = saved.jobId;
-  state.activeJobAction = saved.action;
-  setBusy(true, `Restoring ${JOB_LABELS[saved.action] || "compute job"} status…`);
-  try {
-    const result = await waitForJob(saved.jobId);
-    if (saved.action === "mesh") {
-      applyMeshResult(result);
-      setMessage("The queued mesh job completed while this page was open.");
-    } else {
-      const restored = result.payload_mode === "delta" && result.case_id
-        ? await api(`/api/cases/${result.case_id}`)
-        : result;
-      syncCase(restored, { replace: true });
-      setMessage(`${JOB_LABELS[saved.action] || "Compute job"} complete.`);
-    }
-  } catch (error) {
-    setMessage(error.message, error.jobState !== "cancelled");
-  } finally {
+function storedActiveJob() {
+  try { return JSON.parse(window.sessionStorage.getItem(ACTIVE_JOB_STORAGE_KEY) || "null"); }
+  catch { return null; }
+}
+
+function restoreCaseRunDraft(draft) {
+  if (!draft?.geometry) return;
+  const {geometry, geometryMode, existingGeometry, customGeometry, uploadedGeometry, selectedAirfoil, mesh, handleCount, inputs} = draft;
+  Object.assign(state, {existingGeometry, customGeometry, uploadedGeometry, selectedAirfoil, handleCount});
+  for (const id of CASE_INPUTS) $(`#${id}`).value = inputs[id];
+  $("#mach-range").value = $("#mach").value;
+  $("#aoa-range").value = $("#aoa").value;
+  $("#handle-count").value = String(handleCount);
+  syncReferenceState();
+  syncMethodLabels();
+  renderAirfoilOptions();
+  showAirfoilSource(state.uiucCatalog.find((entry) => entry.key === selectedAirfoil));
+  activateMode(geometryMode, {loadGeometry: false});
+  setGeometry(geometry);
+  if (mesh) applyMeshResult(mesh);
+}
+
+async function withSolverLock(work, caseRun = null) {
+  if (state.busy) return;
+  state.caseRun = caseRun;
+  setBusy(true);
+  try { await work(); }
+  catch (error) { setMessage(error.message, error.jobState !== "cancelled"); }
+  finally {
+    state.caseRun = null;
     setBusy(false);
   }
 }
 
+function resumeActiveJob(saved) {
+  if (!saved?.jobId || !saved?.action) return;
+  const caseRun = saved.caseRun ? {stopRequested: Boolean(saved.caseRun.stopRequested)} : null;
+  return withSolverLock(async () => {
+    restoreCaseRunDraft(saved.caseRun?.draft);
+    state.activeJobId = saved.jobId;
+    state.activeJobAction = saved.action;
+    setMessage(`Restoring ${JOB_LABELS[saved.action] || "compute job"} status…`);
+    const result = await waitForJob(saved.jobId);
+    if (saved.action === "mesh") {
+      applyMeshResult(result);
+      setMessage("Mesh generation complete.");
+    } else {
+      const restored = result.payload_mode === "delta" && result.case_id
+        ? await api(`/api/cases/${result.case_id}`)
+        : result;
+      syncCase(restored, {replace: true});
+      setMessage(`${JOB_LABELS[saved.action] || "Compute job"} complete.`);
+    }
+    if (caseRun) await finishCaseRun(saved.action);
+  }, caseRun);
+}
+
 async function generateMesh() {
-  setBusy(true, `Generating the pyHyp O-grid and preparing the resident ${state.mpiRanks}-rank ADflow solver…`);
-  try {
-    const payload = await runQueuedJob("mesh", { geometry27: state.geometry.geometry27, name: state.geometry.name });
-    applyMeshResult(payload);
-    setMessage("Mesh generated and the geometry-matched ADflow solver is resident. Surrogate prediction is ready.");
-  } catch (error) { setMessage(error.message, error.jobState !== "cancelled"); } finally { setBusy(false); }
+  setMessage(`Generating the pyHyp O-grid and preparing the resident ${state.mpiRanks}-rank ADflow solver…`);
+  const payload = await runQueuedJob("mesh", {geometry27: state.geometry.geometry27, name: state.geometry.name});
+  applyMeshResult(payload);
+  setMessage("Mesh generated and the geometry-matched ADflow solver is resident. Surrogate prediction is ready.");
 }
 
 async function runPrediction() {
-  setBusy(true, "Evaluating the Surrogate and formal force/residual metrics…"); setStageCard("surrogate", "Running", "running");
+  setMessage("Evaluating the Surrogate and formal force/residual metrics…");
+  setStageCard("surrogate", "Running", "running");
   try {
     const steps = Number($("#surrogate-steps").value);
-    const payload = await runQueuedJob("predict", { geometry27: state.geometry.geometry27, name: state.geometry.name, mach: Number($("#mach").value), aoa: Number($("#aoa").value), n_inference_steps: steps });
-    syncCase(payload); setMessage(`Surrogate complete in ${payload.stage.timing.inference_wall_sec.toFixed(2)} s using ${steps} prediction steps.`);
+    const payload = await runQueuedJob("predict", {
+      geometry27: state.geometry.geometry27,
+      name: state.geometry.name,
+      mach: Number($("#mach").value),
+      aoa: Number($("#aoa").value),
+      n_inference_steps: steps,
+    });
+    syncCase(payload);
+    setMessage(`Surrogate complete in ${payload.stage.timing.inference_wall_sec.toFixed(2)} s using ${steps} prediction steps.`);
   } catch (error) {
     setStageCard("surrogate", error.jobState === "cancelled" ? "Ready" : "Failed", "active");
-    setMessage(error.message, error.jobState !== "cancelled");
-  } finally { setBusy(false); }
+    throw error;
+  }
 }
 
 async function runRecovery() {
-  if (!state.case) return; const residualExponent = Number($("#nk-stop-exponent").value); const thresholdLabel = residualThresholdLabel(residualExponent);
-  setBusy(true, `Running NK correction toward residual L2 ratio ${thresholdLabel} with a fixed compute budget…`); setStageCard("recovery", "Running", "running");
+  if (!state.case) return;
+  const residualExponent = Number($("#nk-stop-exponent").value);
+  const thresholdLabel = residualThresholdLabel(residualExponent);
+  setMessage(`Running NK correction toward residual L2 ratio ${thresholdLabel} with a fixed compute budget…`);
+  setStageCard("recovery", "Running", "running");
   try {
-    const payload = await runQueuedJob("recover", { case_id: state.case.case_id, residual_exponent: residualExponent });
+    const payload = await runQueuedJob("recover", {case_id: state.case.case_id, residual_exponent: residualExponent});
     syncCase(payload);
     const recovery = payload.recovery;
     setMessage(recovery.converged
@@ -1168,14 +1453,32 @@ async function runRecovery() {
       : `Surrogate + NK used its fixed compute budget and stopped with ${recovery.termination}; target ${thresholdLabel} (MPI ${state.mpiRanks}).`);
   } catch (error) {
     setStageCard("recovery", error.jobState === "cancelled" ? "Awaiting request" : "Failed", "active");
-    setMessage(error.message, error.jobState !== "cancelled");
-  } finally { setBusy(false); }
+    throw error;
+  }
+}
+
+async function finishCaseRun(completedAction) {
+  const stages = {mesh: generateMesh, predict: runPrediction, recover: runRecovery, reference: runReference};
+  const sequence = Object.keys(stages);
+  const start = completedAction ? sequence.indexOf(completedAction) + 1 : (state.mesh ? 1 : 0);
+  for (const action of sequence.slice(start)) {
+    if (state.caseRun.stopRequested) {
+      setMessage("Case run stopped.");
+      return;
+    }
+    await stages[action]();
+  }
+}
+
+function runCase() {
+  if (!CASE_INPUTS.every((id) => $(`#${id}`).reportValidity())) return;
+  return withSolverLock(() => finishCaseRun(), {stopRequested: false});
 }
 
 async function runReference() {
   if (!state.case) return;
-  if (!window.confirm(`Cold-start ADflow uses ${state.mpiRanks} MPI ranks and may take several minutes. Run the reference solve now?`)) return;
-  setBusy(true, `Running cold-start ADflow from uniform flow on ${state.mpiRanks} MPI ranks…`); setStageCard("reference", "Running", "running");
+  setMessage(`Running cold-start ADflow from uniform flow on ${state.mpiRanks} MPI ranks…`);
+  setStageCard("reference", "Running", "running");
   try {
     const payload = await runQueuedJob("reference", { case_id: state.case.case_id, max_cycles: 3000 });
     syncCase(payload); setMessage(payload.reference.converged
@@ -1183,8 +1486,13 @@ async function runReference() {
       : `ADflow stopped: ${payload.reference.termination || "target not reached"}. Comparisons use this unconverged result.`);
   } catch (error) {
     setStageCard("reference", error.jobState === "cancelled" ? "Optional" : "Failed", "");
-    setMessage(error.message, error.jobState !== "cancelled");
-  } finally { setBusy(false); }
+    throw error;
+  }
+}
+
+function runReferenceManually() {
+  if (!window.confirm(`Cold-start ADflow uses ${state.mpiRanks} MPI ranks and may take several minutes. Run the reference solve now?`)) return;
+  return withSolverLock(runReference);
 }
 
 function bindRange(rangeSelector, numberSelector, callback = null) {
@@ -1204,7 +1512,11 @@ function updateHandleCount(rawValue, { commit = false } = {}) {
 }
 
 function wireEvents() {
-  $("#mesh-button").addEventListener("click", generateMesh); $("#predict-button").addEventListener("click", runPrediction); $("#recover-button").addEventListener("click", runRecovery); $("#reference-button").addEventListener("click", runReference);
+  $("#run-case").addEventListener("click", runCase);
+  $("#mesh-button").addEventListener("click", () => withSolverLock(generateMesh));
+  $("#predict-button").addEventListener("click", () => withSolverLock(runPrediction));
+  $("#recover-button").addEventListener("click", () => withSolverLock(runRecovery));
+  $("#reference-button").addEventListener("click", runReferenceManually);
   $("#cancel-job").addEventListener("click", cancelActiveJob);
   $$(".mode-tab").forEach((button) => button.addEventListener("click", () => activateMode(button.dataset.mode)));
   $("#airfoil-search").addEventListener("input", renderAirfoilOptions);
@@ -1233,20 +1545,41 @@ function wireEvents() {
   bindRange("#mach-range", "#mach", syncReferenceState); bindRange("#aoa-range", "#aoa");
   $("#surrogate-steps").addEventListener("input", () => { syncMethodLabels(); clearCase(); });
   $("#nk-stop-exponent").addEventListener("input", syncMethodLabels);
-  $("#field-channel").addEventListener("change", () => { void ensureFieldChannel(); });
-  ["#field-scale-min", "#field-scale-max", "#error-scale-min", "#error-scale-max"].forEach((selector) => $(selector).addEventListener("input", scheduleFields));
-  $("#field-scale-auto").addEventListener("click", () => { $("#field-scale-min").value = ""; $("#field-scale-max").value = ""; renderFields(); });
-  $("#error-scale-auto").addEventListener("click", () => { $("#error-scale-min").value = ""; $("#error-scale-max").value = ""; renderFields(); });
+  $("#field-channel").addEventListener("change", () => {
+    restoreScaleInputs("field");
+    restoreScaleInputs("error");
+    void ensureFieldChannel();
+  });
+  $("#cp-error-mode").addEventListener("change", () => {
+    restoreScaleInputs("error");
+    renderFields();
+  });
+  for (const prefix of ["field", "error"]) {
+    for (const input of scaleInputs(prefix)) {
+      input.addEventListener("input", () => { rememberScaleInputs(prefix); scheduleFields(); });
+    }
+    $(`#${prefix}-scale-auto`).addEventListener("click", () => {
+      savedScaleInputs.delete(scaleInputKey(prefix));
+      restoreScaleInputs(prefix);
+      renderFields();
+    });
+  }
   window.addEventListener("resize", () => { if (Object.values(state.stages).some((stage) => stage.field)) scheduleFields(); });
 }
 
 async function init() {
-  drawEditorGrid(); wireEvents(); syncMethodLabels(); syncReferenceState(); await Promise.all([loadRuntime(), loadPresets(), loadUiucCatalog()]); updateEnabledState();
-  if (window.sessionStorage.getItem(ACTIVE_JOB_STORAGE_KEY)) {
-    await resumeActiveJob();
+  drawEditorGrid(); wireEvents(); syncMethodLabels(); syncReferenceState();
+  if (!await loadRuntime()) return;
+  await Promise.all([loadPresets(), loadUiucCatalog()]);
+  updateEnabledState();
+  const saved = storedActiveJob();
+  if (saved) {
+    await resumeActiveJob(saved);
   } else if (state.surrogateOnline && state.solverReady) {
-    setMessage("Runtime ready. Choose a geometry, then generate its mesh.");
+    setMessage("Choose a geometry and flow conditions, then run the case.");
   }
 }
 
-init().catch((error) => setMessage(error.message, true));
+init().catch((error) => {
+  if ($("#system-status").dataset.state !== "offline") setMessage(error.message, true);
+});

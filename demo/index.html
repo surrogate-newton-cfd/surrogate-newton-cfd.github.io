@@ -3,21 +3,26 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="Interactive Surrogate–Newton CFD airfoil prediction and Newton–Krylov correction demonstration.">
+    <meta name="description" content="Compare airfoil flow predictions, NK correction, and cold-start CFD.">
     <meta name="cfd-api-base" content="https://hunting-estimator-replace.ngrok-free.dev">
-    <title>Surrogate–Newton CFD · Interactive demo</title>
-    <link rel="icon" href="data:,">
-    <link rel="stylesheet" href="./styles.css?v=20261111-github">
+    <title>Surrogate–Newton CFD · Airfoil CFD demo</title>
+    <link rel="icon" href="./assets/favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="./styles.css?v=run-controls">
+    <link rel="stylesheet" href="./field-display.css?v=cp1">
   </head>
   <body class="demo-page">
-    <main class="demo-shell">
+    <a class="skip-link" href="#main">Skip to content</a>
+    <header class="project-header demo-shell">
+      <a class="brand" href="../" aria-label="Surrogate–Newton project page">
+        <svg viewBox="0 0 42 24" aria-hidden="true"><path d="M2 15C8 3 23 5 40 15C22 14 10 20 2 15Z" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M2 15H40" stroke="currentColor" stroke-width=".6"/></svg>
+        <span>Surrogate<span class="brand-dash">–</span>Newton</span>
+      </a>
+      <a class="project-link" href="../">Project page</a>
+    </header>
+    <main class="demo-shell" id="main">
       <header class="demo-masthead">
-        <a class="back-link" href="../">← Project page</a>
-        <h1>Surrogate prediction and NK correction</h1>
-        <p>Compare a configurable Surrogate prediction, Newton–Krylov correction, and an optional cold-start ADflow reference on the same mesh.</p>
-
-        <details class="resource-notice"><summary>Timing and convergence on this shared research server</summary><p><strong>Timing on this shared research server.</strong> Limited hardware and queueing can make this public Demo slower than the formal benchmark setting. Cold-start ADflow convergence is case-dependent and its wall time may fluctuate substantially, typically from 10–100 s; Surrogate + NK typically takes 3–10 s. Optimization speedup is likewise strongly dependent on the case and optimization trajectory. Queue waiting time is reported separately from solver wall time. Reaching a residual target does not itself guarantee aerodynamic-coefficient accuracy.</p></details>
-        <div id="system-status" class="runtime-status" data-state="pending"><span class="status-dot"></span><span>Checking local runtime…</span></div>
+        <h1>Airfoil CFD demo</h1>
+        <p>Choose an airfoil and flow conditions. Compare the prediction, NK correction and cold-start CFD on the same mesh.</p>
       </header>
 
       <section id="active-job" class="active-job" aria-live="polite" hidden>
@@ -32,20 +37,14 @@
       </section>
 
       <section class="demo-section case-section" aria-labelledby="case-heading">
-        <div class="section-heading"><span>1</span><div><h2 id="case-heading">Define the case</h2><p>Select, upload, or deform a two-dimensional airfoil.</p></div></div>
-        <div class="method-bar" aria-label="Method settings and mesh preparation">
-          <div class="method-bar-heading"><strong>Method settings</strong><span>Set the prediction budget and NK target, then prepare the shared mesh.</span></div>
-          <div class="method-setting-grid">
-            <label class="horizontal-setting" for="surrogate-steps"><span>Surrogate steps<small>Default 5; 5–10 recommended</small></span><input id="surrogate-steps" type="number" min="1" max="20" step="1" value="5"></label>
-            <label class="horizontal-setting" for="nk-stop-exponent"><span>Surrogate + NK convergence target<small>10^-p · fixed compute budget</small></span><input id="nk-stop-exponent" aria-label="Exponent p" type="number" min="4" max="10" step="1" value="6"></label>
-            <div class="mesh-preparation"><button id="mesh-button" class="action-button" disabled>Generate mesh</button><div id="mesh-status" class="mesh-status">Mesh not generated.</div></div>
-          </div>
-          <p id="case-message" class="case-message" role="status" aria-live="polite">Preparing the local workspace.</p>
+        <div class="section-heading case-heading">
+          <h2 id="case-heading">Define the case</h2>
+          <div id="system-status" class="runtime-status" role="status" data-state="pending"><span class="status-dot" aria-hidden="true"></span><span>Connecting to the solver…</span></div>
         </div>
         <div class="case-layout">
-          <aside class="case-controls">
+          <div class="case-controls">
             <div class="control-group geometry-source-group">
-              <span class="control-label">Geometry source</span>
+              <h3 class="control-label">Geometry</h3>
               <div class="mode-tabs" role="tablist" aria-label="Geometry source">
                 <button class="mode-tab active" data-mode="existing" role="tab" aria-selected="true">Existing</button>
                 <button class="mode-tab" data-mode="upload" role="tab" aria-selected="false">Upload</button>
@@ -53,11 +52,11 @@
               </div>
               <div class="mode-panel" data-panel="existing">
                 <label for="airfoil-search">Search existing airfoils</label>
-                <input id="airfoil-search" type="search" placeholder="Search NACA, Selig, Wortmann…" autocomplete="off" disabled>
+                <input id="airfoil-search" type="search" placeholder="NACA, Selig, Wortmann…" autocomplete="off" disabled>
                 <label for="airfoil-preset">Airfoil</label>
                 <select id="airfoil-preset" disabled><optgroup label="Project presets"><option value="local:rae2822">RAE2822</option><option value="local:oat15a">OAT15A</option></optgroup></select>
-                <p id="airfoil-catalog-status" class="control-help">Loading the local UIUC airfoil library…</p>
-                <p class="control-help uiuc-training-note">The UIUC catalog is provided for geometry exploration; it was not explicitly included as a named training dataset. Use the geometry-support indicator for shape proximity.</p>
+                <p id="airfoil-catalog-status" class="control-help">Loading the UIUC airfoil library…</p>
+                <details class="catalog-note"><summary>About the UIUC catalog</summary><p>The UIUC catalog was not explicitly included as a named training dataset. Geometry support measures proximity to the training shapes.</p></details>
                 <p id="airfoil-description" class="airfoil-description">Project preset.</p>
                 <a id="airfoil-source" class="airfoil-source" href="https://m-selig.ae.illinois.edu/ads.html" target="_blank" rel="noreferrer" hidden>UIUC coordinate source ↗</a>
               </div>
@@ -72,20 +71,19 @@
             </div>
 
             <div class="control-group flow-controls">
-              <span class="control-label">Flow condition</span>
-              <label class="range-control" for="mach-range"><span>Mach</span><input id="mach-range" type="range" min="0.4" max="0.8" step="0.01" value="0.74"><input id="mach" type="number" min="0.4" max="0.8" step="0.01" value="0.74"></label>
-              <label class="range-control" for="aoa-range"><span>Angle of attack (deg)</span><input id="aoa-range" type="range" min="-2" max="6" step="0.1" value="1.0"><input id="aoa" type="number" min="-2" max="6" step="0.1" value="1.0"></label>
+              <h3 class="control-label">Flow conditions</h3>
+              <div class="range-control"><label for="mach-range">Mach</label><input id="mach-range" type="range" min="0.4" max="0.8" step="0.01" value="0.74"><input id="mach" type="number" required aria-label="Mach value" min="0.4" max="0.8" step="0.01" value="0.74"></div>
+              <div class="range-control"><label for="aoa-range">Angle of attack (°)</label><input id="aoa-range" type="range" min="-2" max="6" step="0.1" value="1.0"><input id="aoa" type="number" required aria-label="Angle of attack in degrees" min="-2" max="6" step="0.1" value="1.0"></div>
               <div class="reference-state-readout" aria-label="Fixed thermodynamic reference state">
                 <span>Derived Reynolds number</span><strong id="reynolds-value">1.638 × 10<sup>7</sup></strong>
                 <small><i>T</i><sub>∞</sub> = 300 K · <i>p</i><sub>∞</sub> = 101325 Pa · <i>c</i> = 1 m · γ = 1.4</small>
               </div>
-              <p class="control-help">Re follows Mach under the fixed training-data reference state; it is not an independent input.</p>
             </div>
 
-          </aside>
+          </div>
 
           <div class="geometry-panel">
-            <div class="panel-title-row"><div><h3 id="editor-title">Airfoil geometry</h3><p>Custom mode exposes draggable deformation points.</p></div><button id="reset-geometry" class="text-button">Reset custom geometry</button></div>
+            <div class="panel-title-row"><div><h3 id="editor-title">Airfoil geometry</h3><p>Choose Custom to edit the shape with drag points.</p></div><button id="reset-geometry" class="text-button">Reset custom geometry</button></div>
             <div id="geometry-editor" class="geometry-editor">
               <svg id="airfoil-svg" viewBox="0 0 1000 360" role="img" aria-label="Editable airfoil geometry"><g class="editor-grid"></g><path id="airfoil-fill" class="airfoil-fill"></path><path id="upper-path" class="surface-path"></path><path id="lower-path" class="surface-path"></path><g id="handle-lines" class="handle-lines"></g><g id="upper-handles" class="handles"></g><g id="lower-handles" class="handles"></g></svg>
               <span class="x-axis-label">x / c</span><span class="y-axis-label">y / c</span>
@@ -99,17 +97,72 @@
             </div>
           </div>
         </div>
-
+        <div class="method-bar" aria-label="Method settings and run controls">
+          <div class="method-bar-heading"><strong>Method settings</strong></div>
+          <div class="method-setting-grid">
+            <label class="horizontal-setting" for="surrogate-steps"><span>Surrogate steps<small>Default 5; 5–10 recommended</small></span><input id="surrogate-steps" type="number" required min="1" max="20" step="1" value="5"></label>
+            <label class="horizontal-setting" for="nk-stop-exponent"><span>Surrogate + NK convergence target<small>10⁻ᵖ · fixed compute budget</small></span><input id="nk-stop-exponent" aria-label="NK correction convergence exponent p" type="number" required min="4" max="10" step="1" value="6"></label>
+          </div>
+          <div class="case-run-actions">
+            <div class="case-run-option">
+              <button id="mesh-button" class="action-button" type="button" aria-describedby="mesh-description" disabled>Generate mesh</button>
+              <p id="mesh-description" class="case-run-description">Prepare the mesh. Then choose a solver in <a href="#results-heading">Compare predictions</a>.</p>
+              <div id="mesh-status" class="mesh-status">Mesh not generated.</div>
+            </div>
+            <div class="case-run-option">
+              <button id="run-case" class="action-button primary-button" type="button" aria-describedby="run-case-description" disabled>Run case</button>
+              <p id="run-case-description" class="case-run-description">Prepare the mesh if needed, then run Surrogate, NK correction and cold-start CFD to show the error maps.</p>
+            </div>
+          </div>
+          <p id="case-message" class="case-message" role="status" aria-live="polite">Preparing the local workspace.</p>
+        </div>
       </section>
 
       <section class="demo-section results-section" aria-labelledby="results-heading">
-        <div class="section-heading"><span>2</span><div><h2 id="results-heading">Compare predictions</h2><p>Completed methods remain visible on common axes and colour scales.</p></div></div>
-        <div class="stage-summary" aria-label="Available solution stages">
-          <article id="stage-surrogate" class="stage-card active"><i></i><div><strong>Surrogate</strong><span id="surrogate-stage-detail">5 prediction steps</span></div><small class="stage-state">Ready</small></article>
-          <article id="stage-recovery" class="stage-card"><i></i><div><strong>Surrogate + NK</strong><span id="nk-stage-detail">Target 10⁻⁶ · fixed compute budget</span></div><small class="stage-state">Awaiting Surrogate</small></article>
-          <article id="stage-reference" class="stage-card"><i></i><div><strong>ADflow</strong><span>Cold-start · up to 3000 cycles</span></div><small class="stage-state">Optional</small></article>
+        <div class="section-heading">
+          <div><h2 id="results-heading">Compare predictions</h2><p>Completed methods share the same axes and colour scales.</p></div>
         </div>
-        <div class="solver-actions"><button id="predict-button" class="action-button surrogate-run" disabled>Run Surrogate</button><button id="recover-button" class="action-button nk-run" disabled>Run Surrogate + NK</button><button id="reference-button" class="action-button adflow-run" disabled>Run cold-start ADflow</button></div>
+        <div class="stage-summary" aria-label="Available solution stages">
+          <article id="stage-surrogate" class="stage-card active"><i aria-hidden="true"></i><div><strong>Surrogate</strong><span id="surrogate-stage-detail">5 prediction steps</span></div><small class="stage-state">Ready</small>
+            <button id="predict-button" class="action-button surrogate-run" disabled>Run Surrogate</button>
+          </article>
+          <article id="stage-recovery" class="stage-card"><i aria-hidden="true"></i><div><strong>Surrogate + NK</strong><span id="nk-stage-detail">Target 10⁻⁶ · fixed compute budget</span></div><small class="stage-state">Needs Surrogate</small>
+            <button id="recover-button" class="action-button nk-run" disabled>Run Surrogate + NK</button>
+          </article>
+          <article id="stage-reference" class="stage-card"><i aria-hidden="true"></i><div><strong>Cold-start CFD</strong><span>Cold-start · up to 3000 cycles</span></div><small class="stage-state">Optional</small>
+            <button id="reference-button" class="action-button adflow-run" disabled>Run cold-start ADflow</button>
+          </article>
+        </div>
+
+        <article class="result-panel fields-panel">
+          <div class="result-heading field-heading"><div><h3 id="field-title">Pressure coefficient fields</h3><p>Each solution is shown at the same scale for the selected field.</p></div></div>
+          <div class="field-toolbar">
+            <label for="field-channel"><span>Field</span><select id="field-channel"><option value="cp" selected>Pressure coefficient, Cₚ</option><option value="density">Density</option><option value="velocity_x">Velocity X</option><option value="velocity_y">Velocity Y</option><option value="pressure">Pressure ratio, p/p∞</option><option value="sa_nu_tilde">SA working variable</option></select></label>
+            <label for="field-scale-min"><span>Colour minimum</span><input id="field-scale-min" type="number" step="any" placeholder="−2"></label>
+            <label for="field-scale-max"><span>Colour maximum</span><input id="field-scale-max" type="number" step="any" placeholder="1.2"></label>
+            <button id="field-scale-auto" class="text-button" type="button">Use standard scale</button>
+          </div>
+          <div class="field-grid">
+            <figure class="field-item" data-solution="surrogate"><figcaption>Surrogate</figcaption><div><canvas id="field-surrogate" aria-label="Surrogate field"></canvas><p id="field-surrogate-empty" class="field-placeholder">Awaiting result</p></div></figure>
+            <figure class="field-item" data-solution="recovery"><figcaption>Surrogate + NK</figcaption><div><canvas id="field-recovery" aria-label="Field after NK correction"></canvas><p id="field-recovery-empty" class="field-placeholder">Awaiting result</p></div></figure>
+            <figure class="field-item" data-solution="reference"><figcaption>Cold-start CFD</figcaption><div><canvas id="field-reference" aria-label="ADflow field"></canvas><p id="field-reference-empty" class="field-placeholder">Awaiting result</p></div></figure>
+          </div>
+          <div id="shared-colorbar" class="field-colorbar" role="img" hidden><span class="field-colorbar-title"></span><div class="field-colorbar-gradient"></div><div class="field-colorbar-ticks"></div></div>
+          <div id="error-section" class="error-section" hidden>
+            <div class="error-heading"><div><h4 id="error-title">Signed pressure coefficient error</h4><p id="error-description">Field minus cold-start CFD.</p></div></div>
+            <div class="error-toolbar">
+              <label id="cp-error-options" for="cp-error-mode"><span>Error display</span><select id="cp-error-mode"><option value="signed">Signed ΔCₚ</option><option value="absolute">Absolute |ΔCₚ|</option></select></label>
+              <label for="error-scale-min"><span>Error minimum</span><input id="error-scale-min" type="number" step="any" placeholder="Auto"></label>
+              <label for="error-scale-max"><span>Error maximum</span><input id="error-scale-max" type="number" step="any" placeholder="Auto"></label>
+              <button id="error-scale-auto" class="text-button" type="button">Use automatic limits</button>
+            </div>
+            <div class="error-grid">
+              <figure class="field-item" data-solution="surrogate"><figcaption>Surrogate error <span id="surrogate-error-mse"></span></figcaption><div><canvas id="error-surrogate" aria-label="Surrogate field error"></canvas></div></figure>
+              <figure class="field-item" data-solution="recovery"><figcaption>Surrogate + NK error <span id="recovery-error-mse"></span></figcaption><div><canvas id="error-recovery" aria-label="Field error after NK correction"></canvas></div></figure>
+            </div>
+            <div id="error-colorbar" class="field-colorbar" role="img" hidden><span class="field-colorbar-title"></span><div class="field-colorbar-gradient"></div><div class="field-colorbar-ticks"></div></div>
+          </div>
+        </article>
 
         <div class="surface-plot-grid">
           <article class="result-panel cp-panel">
@@ -124,40 +177,14 @@
 
         <article class="result-panel metric-panel">
           <div class="result-heading"><div><h3>Case metrics</h3><p>Cm is referenced at x/c = 0.25 with nose-up positive. Signed Δ values and absolute relative errors compare against the current ADflow result; check its convergence status. Timings exclude queue waiting and network transfer; expand CD to inspect pressure and viscous components.</p></div></div>
-          <div class="metric-table-wrap"><table class="comparison-table"><thead><tr><th>Metric</th><th>Surrogate</th><th>Surrogate + NK</th><th>ADflow</th></tr></thead><tbody id="comparison-body"></tbody></table></div>
-        </article>
-
-        <article class="result-panel fields-panel">
-          <div class="result-heading field-heading"><div><h3 id="field-title">Pressure fields</h3><p>Switch among five channels on a shared colour scale. Display fields use float32; force coefficients retain full precision.</p></div></div>
-          <div class="field-toolbar">
-            <label for="field-channel"><span>Field</span><select id="field-channel"><option value="density">Density</option><option value="velocity_x">Velocity X</option><option value="velocity_y">Velocity Y</option><option value="pressure" selected>Pressure</option><option value="sa_nu_tilde">SA working variable</option></select></label>
-            <label for="field-scale-min"><span>Colour minimum</span><input id="field-scale-min" type="number" step="any" placeholder="Auto"></label>
-            <label for="field-scale-max"><span>Colour maximum</span><input id="field-scale-max" type="number" step="any" placeholder="Auto"></label>
-            <button id="field-scale-auto" class="text-button" type="button">Use automatic limits</button>
-            <div id="shared-colorbar" class="shared-colorbar" hidden><span id="color-min">—</span><i></i><span id="color-max">—</span></div>
-          </div>
-          <div class="field-grid">
-            <figure class="field-item"><figcaption>Surrogate</figcaption><div><canvas id="field-surrogate" aria-label="Surrogate field"></canvas><p id="field-surrogate-empty" class="field-placeholder">Awaiting result</p></div></figure>
-            <figure class="field-item"><figcaption>Surrogate + NK</figcaption><div><canvas id="field-recovery" aria-label="Newton–Krylov-corrected field"></canvas><p id="field-recovery-empty" class="field-placeholder">Awaiting result</p></div></figure>
-            <figure class="field-item"><figcaption>ADflow</figcaption><div><canvas id="field-reference" aria-label="ADflow field"></canvas><p id="field-reference-empty" class="field-placeholder">Awaiting result</p></div></figure>
-          </div>
-          <div id="error-section" class="error-section" hidden>
-            <div class="error-heading"><div><h4 id="error-title">Absolute pressure error against ADflow</h4><p>Surrogate and corrected fields use the same configurable error scale.</p></div></div>
-            <div class="error-toolbar">
-              <label for="error-scale-min"><span>Error minimum</span><input id="error-scale-min" type="number" step="any" value="0"></label>
-              <label for="error-scale-max"><span>Error maximum</span><input id="error-scale-max" type="number" step="any" placeholder="Auto"></label>
-              <button id="error-scale-auto" class="text-button" type="button">Use automatic limits</button>
-              <div class="error-colorbar"><span id="error-min">0</span><i></i><span id="error-max">—</span></div>
-            </div>
-            <div class="error-grid">
-              <figure class="field-item"><figcaption>Surrogate error <span id="surrogate-error-mse"></span></figcaption><div><canvas id="error-surrogate" aria-label="Surrogate absolute field error"></canvas></div></figure>
-              <figure class="field-item"><figcaption>Surrogate + NK error <span id="recovery-error-mse"></span></figcaption><div><canvas id="error-recovery" aria-label="Newton–Krylov absolute field error"></canvas></div></figure>
-            </div>
-          </div>
+          <div class="metric-table-wrap"><table class="comparison-table"><thead><tr><th>Metric</th><th>Surrogate</th><th>Surrogate + NK</th><th>Cold-start CFD</th></tr></thead><tbody id="comparison-body"></tbody></table></div>
         </article>
       </section>
-      <footer class="paper-footer"><a href="../">Project page</a><span>Surrogate–Newton CFD interactive demo</span></footer>
+      <footer class="demo-footer">
+        <details class="resource-notice"><summary>Timing and convergence on this shared research server</summary><p><strong>Timing on this shared research server.</strong> Limited hardware and queueing can make this public Demo slower than the formal benchmark setting. Cold-start ADflow convergence is case-dependent and its wall time may fluctuate substantially, typically from 10–100 s; Surrogate + NK typically takes 3–10 s. Optimization speedup is likewise strongly dependent on the case and optimization trajectory. Queue waiting time is reported separately from solver wall time. Reaching a residual target does not itself guarantee aerodynamic-coefficient accuracy.</p></details>
+      </footer>
     </main>
-    <script src="./app.js?v=20261111-github"></script>
+    <script src="./field-display.js?v=cp3"></script>
+    <script src="./app.js?v=live-status"></script>
   </body>
 </html>
