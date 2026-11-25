@@ -497,16 +497,16 @@ function setBusy(busy, message = "") {
   if (message) setMessage(message);
 }
 
-function residualThresholdLabel(exponent) {
-  const superscript = { "0": "⁰", "1": "¹", "2": "²", "3": "³", "4": "⁴", "5": "⁵", "6": "⁶", "7": "⁷", "8": "⁸", "9": "⁹" };
-  return `10⁻${String(exponent).split("").map((digit) => superscript[digit]).join("")}`;
+function powerOfTenLabel(exponent) {
+  const digits = String(Math.abs(exponent)).replace(/\d/g, (digit) => "⁰¹²³⁴⁵⁶⁷⁸⁹"[digit]);
+  return `10${exponent < 0 ? "⁻" : ""}${digits}`;
 }
 
 function syncMethodLabels() {
   const surrogateSteps = Number($("#surrogate-steps").value);
   const stopExponent = Number($("#nk-stop-exponent").value);
   $("#surrogate-stage-detail").textContent = `${surrogateSteps} prediction steps`;
-  $("#nk-stage-detail").textContent = `Target ${residualThresholdLabel(stopExponent)} · fixed compute budget`;
+  $("#nk-stage-detail").textContent = `Target ${powerOfTenLabel(-stopExponent)} · fixed compute budget`;
   $("#recover-button").textContent = "Run Surrogate + NK";
 }
 
@@ -603,19 +603,34 @@ function plotPath(xValues, yValues, mapX, mapY) {
   return xValues.map((value, index) => `${index === 0 ? "M" : "L"}${mapX(Number(value)).toFixed(2)},${mapY(Number(yValues[index])).toFixed(2)}`).join(" ");
 }
 
-function drawAxes(svg, { xTicks, yTicks, mapX, mapY, xLabel, yLabel, yFormatter = (tick) => Number(tick).toPrecision(2) }) {
+function drawSurfaceAxes(svg, { yMin, yMax, yTicks, yLabel, yFormatter, inverted = false }) {
+  const { width, height } = svg.viewBox.baseVal;
+  const left = 100, right = width - 26, top = 25, bottom = height - 83;
+  const mapX = (value) => left + value * (right - left);
+  const mapY = (value) => top + (inverted ? value - yMin : yMax - value) / (yMax - yMin) * (bottom - top);
   const grid = svg.querySelector(".chart-grid"); const labels = svg.querySelector(".chart-labels");
   grid.replaceChildren(); labels.replaceChildren();
-  xTicks.forEach((tick) => {
-    grid.appendChild(svgElement("line", { x1: mapX(tick), x2: mapX(tick), y1: 25, y2: svg.viewBox.baseVal.height - 45, class: tick === xTicks[0] ? "axis" : "" }));
-    const label = svgElement("text", { x: mapX(tick), y: svg.viewBox.baseVal.height - 23, "text-anchor": "middle" }); label.textContent = formatNumber(tick, 2); labels.appendChild(label);
-  });
-  yTicks.forEach((tick) => {
-    grid.appendChild(svgElement("line", { x1: 58, x2: svg.viewBox.baseVal.width - 22, y1: mapY(tick), y2: mapY(tick), class: tick === 0 ? "axis" : "" }));
-    const label = svgElement("text", { x: 50, y: mapY(tick) + 4, "text-anchor": "end" }); label.textContent = yFormatter(tick); labels.appendChild(label);
-  });
-  const xTitle = svgElement("text", { x: svg.viewBox.baseVal.width / 2, y: svg.viewBox.baseVal.height - 3, "text-anchor": "middle" }); xTitle.textContent = xLabel; labels.appendChild(xTitle);
-  const yTitle = svgElement("text", { x: 14, y: svg.viewBox.baseVal.height / 2, transform: `rotate(-90 14 ${svg.viewBox.baseVal.height / 2})`, "text-anchor": "middle" }); yTitle.textContent = yLabel; labels.appendChild(yTitle);
+  for (const tick of [0, 0.25, 0.5, 0.75, 1]) {
+    const x = mapX(tick);
+    grid.appendChild(svgElement("line", { x1: x, x2: x, y1: top, y2: bottom, class: tick === 0 ? "axis" : "" }));
+    const label = svgElement("text", { x, y: bottom + 42, "text-anchor": "middle" });
+    label.textContent = formatNumber(tick, 2);
+    labels.appendChild(label);
+  }
+  for (const tick of yTicks) {
+    const y = mapY(tick);
+    grid.appendChild(svgElement("line", { x1: left, x2: right, y1: y, y2: y, class: tick === 0 ? "axis" : "" }));
+    const label = svgElement("text", { x: left - 12, y, "dominant-baseline": "central", "text-anchor": "end" });
+    label.textContent = yFormatter(tick);
+    labels.appendChild(label);
+  }
+  const xTitle = svgElement("text", { x: (left + right) / 2, y: height - 8, "text-anchor": "middle" });
+  xTitle.textContent = "x / c";
+  const yTitleX = 23, yTitleY = (top + bottom) / 2;
+  const yTitle = svgElement("text", { x: yTitleX, y: yTitleY, transform: `rotate(-90 ${yTitleX} ${yTitleY})`, "text-anchor": "middle" });
+  yTitle.textContent = yLabel;
+  labels.append(xTitle, yTitle);
+  return { mapX, mapY };
 }
 
 function niceStep(span, targetCount = 6) {
@@ -661,8 +676,10 @@ function renderCp() {
   const margin = Math.max(0.08, 0.05 * (actualMax - actualMin));
   const yMin = actualMin - margin;
   const yMax = actualMax > 1.05 ? actualMax + margin : 1.12;
-  const mapX = (value) => 58 + value * 820; const mapY = (value) => 25 + ((value - yMin) / (yMax - yMin || 1)) * 317;
-  drawAxes(svg, { xTicks: [0, 0.25, 0.5, 0.75, 1], yTicks: niceTicks(yMin, yMax, { include: [0, 1] }), mapX, mapY, xLabel: "x / c", yLabel: "Cp", yFormatter: (tick) => Number(tick).toFixed(1) });
+  const { mapX, mapY } = drawSurfaceAxes(svg, {
+    yMin, yMax, yTicks: niceTicks(yMin, yMax, { include: [0, 1] }),
+    yLabel: "Cp", yFormatter: (tick) => tick.toFixed(1), inverted: true,
+  });
   const byKey = Object.fromEntries(available);
   const drawOrder = ["reference", "recovery", "surrogate"].filter((key) => byKey[key]);
   drawOrder.forEach((key) => {
@@ -713,8 +730,14 @@ function renderCf() {
   const margin = Math.max(5e-5, 0.08 * (actualMax - actualMin || 1e-3));
   const yMin = actualMax > 0 && actualMin >= 0 ? 0 : actualMin - margin;
   const yMax = actualMax + margin;
-  const mapX = (value) => 58 + value * 820; const mapY = (value) => 25 + ((yMax - value) / (yMax - yMin || 1)) * 317;
-  drawAxes(svg, { xTicks: [0, 0.25, 0.5, 0.75, 1], yTicks: niceTicks(yMin, yMax, { include: [0] }), mapX, mapY, xLabel: "x / c", yLabel: "Cf", yFormatter: (tick) => formatNumber(tick, 4) });
+  const exponent = Math.floor(Math.log10(Math.max(-yMin, yMax)));
+  const scale = 10 ** exponent;
+  const decimals = Math.max(0, exponent - Math.floor(Math.log10(niceStep(yMax - yMin))));
+  const { mapX, mapY } = drawSurfaceAxes(svg, {
+    yMin, yMax, yTicks: niceTicks(yMin, yMax, { include: [0] }),
+    yLabel: exponent === 0 ? "Cf" : `Cf (×${powerOfTenLabel(exponent)})`,
+    yFormatter: (tick) => String(Number((tick / scale).toFixed(decimals))).replace("-", "−"),
+  });
   const byKey = Object.fromEntries(available);
   const drawOrder = ["reference", "recovery", "surrogate"].filter((key) => byKey[key]);
   drawOrder.forEach((key) => {
@@ -1441,7 +1464,7 @@ async function runPrediction() {
 async function runRecovery() {
   if (!state.case) return;
   const residualExponent = Number($("#nk-stop-exponent").value);
-  const thresholdLabel = residualThresholdLabel(residualExponent);
+  const thresholdLabel = powerOfTenLabel(-residualExponent);
   setMessage(`Running NK correction toward residual L2 ratio ${thresholdLabel} with a fixed compute budget…`);
   setStageCard("recovery", "Running", "running");
   try {
