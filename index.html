@@ -3,6 +3,7 @@
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="description" content="Surrogate–Newton pairs full-field neural prediction with residual-controlled Newton–Krylov correction for reliable, fast steady CFD even out of distribution.">
+  <link rel="canonical" href="https://surrogate-newton-cfd.github.io/">
   <meta name="theme-color" content="#ffffff"><title>Surrogate–Newton</title>
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="style.css?v=plan-a-1">
@@ -20,7 +21,7 @@
   <link rel="stylesheet" href="offline-ood.css?v=focused">
   <link rel="stylesheet" href="mechanism.css?v=polish-1">
   <link rel="stylesheet" href="aerodynamic-design.css?v=plan-a-1">
-  <link rel="stylesheet" href="editorial.css?v=continuous-sequence">
+  <link rel="stylesheet" href="editorial.css?v=hero-sweep-2">
   <link rel="stylesheet" href="polish.css?v=shared-convergence">
 </head>
 <body>
@@ -41,7 +42,7 @@
           <a href="#design">Why OOD matters</a>
           <a href="#design-results">Optimization results</a>
           <a href="#compare">Side by side</a>
-          <a href="#mechanism">Why it works</a>
+          <a href="#mechanism">Mechanism</a>
           <a href="#faq">Questions</a>
           <a href="#research">Paper &amp; citation</a>
         </div>
@@ -55,12 +56,16 @@
 <main id="main">
   <!-- 1. HERO -->
   <section class="hero hero-opening" id="top" aria-labelledby="hero-title">
-    <div class="hero-copy wrap">
+    <div class="hero-copy wrap" id="main-content">
       <p class="hero-project">Surrogate–Newton</p>
-      <h1 id="hero-title">Surrogate-accelerated CFD.<br>Fast and reliable out of distribution.</h1>
-      <p class="hero-lede">Initialize with a <strong class="hero-surrogate">surrogate</strong>.<br>Converge with <strong class="hero-newton">Newton–Krylov</strong> correction.</p>
-      <figure class="hero-flow" aria-label="NK correction along the RAE2822-to-ellipse sequence">
-        <figcaption class="hero-flow-caption">NK correction</figcaption>
+      <h1 id="hero-title">Fast and reliable steady CFD<br>for OOD geometries.</h1>
+      <p class="hero-lede" id="abstract">Initialize with a <strong class="hero-surrogate">surrogate</strong>.<br>Converge with <strong class="hero-newton">Newton–Krylov</strong> correction.</p>
+      <figure class="hero-flow" aria-label="Surrogate prediction followed by NK correction along the RAE2822-to-ellipse sequence">
+        <figcaption class="hero-flow-caption hero-flow-stages" id="hero-flow-stages">
+          <span class="hero-stage" data-stage="surrogate">Surrogate prediction</span>
+          <span class="hero-stage-arrow" aria-hidden="true">→</span>
+          <span class="hero-stage" data-stage="nk">NK correction</span>
+        </figcaption>
         <div class="hero-field-keys">
           <div class="hero-field-key">
             <span>C<sub>p</sub></span>
@@ -108,7 +113,7 @@
   <!-- 2. HIGHLIGHTS -->
   <section class="highlights-band section" id="highlights" aria-labelledby="highlights-title">
     <div class="hero-highlights wrap">
-      <div class="highlights-heading">
+      <div class="highlights-heading" id="teaser-caption">
         <div>
           <h2 id="highlights-title">Get the highlights.</h2>
         </div>
@@ -239,7 +244,7 @@
 
   <!-- 5. CLOSER LOOK -->
   <section class="convergence-section section" id="convergence" aria-labelledby="convergence-title">
-    <header class="wrap convergence-heading">
+    <header class="wrap convergence-heading" id="results">
       <div class="convergence-heading-copy">
         <h2 id="convergence-title">Take a closer look.</h2>
         <p class="section-lede">Same mesh. Same tolerance. Convergence compared case by case.</p>
@@ -337,12 +342,12 @@
   <!-- 6. OFFLINE OOD BENCHMARKS -->
   <section class="ood-section section section-band" id="offline-ood" aria-labelledby="ood-title">
     <div class="wrap design-wrap">
-      <header class="design-heading ood-heading">
+      <header class="design-heading ood-heading" id="benchmark">
         <p class="section-kicker">Out-of-distribution benchmarks</p>
         <h2 id="ood-title">Accurate beyond the training set.</h2>
         <p>Offline benchmarks on unseen airfoils and 3.5M-cell wings.</p>
       </header>      <p id="ood-status" class="design-caption" role="status" hidden></p>
-      <div class="ood-results">
+      <div class="ood-results" id="three-dimensional">
         <article class="ood-card" id="ood-airfoils" role="tabpanel" aria-labelledby="ood-airfoils-tab" tabindex="0">
           <header class="ood-card-heading"><h3>2D airfoils</h3><span>16,399 transonic cases</span></header>
           <div class="ood-geometry">
@@ -547,7 +552,7 @@
   <!-- 8. OPTIMIZATION RESULTS -->
   <section class="design-section section design-results" id="design-results" aria-labelledby="design-results-title">
     <div class="wrap design-wrap">
-      <header class="design-heading">
+      <header class="design-heading" id="optimization">
         <p class="section-kicker">Design optimization</p>
         <h2 id="design-results-title">Faster search. Verified designs.</h2>
         <p>Two aerodynamic design tasks comparing search efficiency and independently CFD-verified performance.<sup class="fn"><a href="#fn7" aria-label="Footnote 7">7</a></sup></p>
@@ -757,12 +762,13 @@
     </div>
   </section>
 
-  <!-- 10. WHY IT WORKS -->
+  <!-- 10. MECHANISM -->
   <section class="mechanism-section section" id="mechanism" aria-labelledby="mechanism-title">
     <div class="wrap design-wrap">
       <header class="design-heading">
-        <h2 id="mechanism-title">Why it works.</h2>
-        <p><b>A low initial residual is not enough.</b> Fast convergence needs both accurate global structure and a Newton solver.</p>
+        <p class="section-kicker">Mechanism</p>
+        <h2 id="mechanism-title">A good start and a good solver both matter.</h2>
+        <p>A low initial residual is not enough. Global field accuracy and Newton–Krylov coupling are complementary.</p>
       </header>
       <div class="design-panel">
         <div class="mechanism-comparison">
@@ -891,24 +897,23 @@
     <div class="wrap design-wrap research-layout">
       <div class="research-meta">
         <p class="section-kicker">Paper &amp; resources</p>
-        <h2 id="research-title">Reliable and efficient steady CFD from surrogate predictions through Newton–Krylov correction</h2>
+        <h2 id="research-title">Surrogate–Newton coupling enables fast and reliable steady CFD for out-of-distribution geometries</h2>
         <p class="authors"><a class="author-link" href="https://leimingcheng.github.io/" target="_blank" rel="noopener">Mingcheng Lei</a><span>Weishao Tang</span><span>Yufei Zhang*</span><span>Haixin Chen*</span></p>
         <p class="affiliation">School of Aerospace Engineering &amp; State Key Laboratory of Advanced Space Propulsion, Tsinghua University<br>*Corresponding authors</p>
-        <div class="research-btns">
+        <div class="research-btns" id="availability">
           <a class="pill-btn solid" href="https://arxiv.org/abs/2608.04400" target="_blank" rel="noreferrer">Paper ↗</a>
           <a class="pill-btn out" href="https://github.com/LeiMingcheng/surrogate-newton-cfd" target="_blank" rel="noreferrer">Code ↗</a>
           <a class="pill-btn out" href="https://huggingface.co/xzztj/surrogate-newton-cfd-fsb-dit-airfoil-inference" target="_blank" rel="noreferrer">Model ↗</a>
         </div>
       </div>
-      <div class="bib-card">
+      <div class="bib-card" id="bibtex">
         <div class="bib-head">
           <span>BibTeX</span>
           <button id="copy-citation" type="button"><span id="citation-label">Copy</span></button>
         </div>
 <pre id="bib-text">@article{lei2026surrogate_newton,
-  title   = {Reliable and efficient steady CFD
-             from surrogate predictions through
-             Newton--Krylov correction},
+  title   = {Reliable and efficient steady CFD from surrogate
+             predictions through Newton--Krylov correction},
   author  = {Lei, Mingcheng and Tang, Weishao and
              Zhang, Yufei and Chen, Haixin},
   journal = {arXiv preprint arXiv:2608.04400},
@@ -948,12 +953,12 @@
 <script src="flow-renderer.js?v=closer-cases" defer></script>
 <script src="highlights-draw.js?v=playback-93" defer></script>
 <script src="highlights_playback93.js?v=polish-2" defer></script>
-<script src="app.js?v=footnote-anchor" defer></script>
+<script src="app.js?v=release-20261125" defer></script>
 <script src="web-demo.js?v=polish-1" defer></script>
 <script src="method.js?v=4" defer></script>
 <script src="closer-look.js?v=closer-unlocked" defer></script>
-<script src="offline-ood.js?v=fig6c-1085" defer></script>
-<script src="hero-flow.js?v=sequence" defer></script>
+<script src="offline-ood.js?v=fig6c-1085-links" defer></script>
+<script src="hero-flow.js?v=hero-sweep-2" defer></script>
 <script src="mechanism.js?v=polish-1" defer></script>
 <script src="aerodynamic-design.js?v=polish-1" defer></script>
 <script src="heading-motion.js?v=plan-a-1" defer></script>

@@ -25,6 +25,13 @@
       tabs[nextIndex].focus();
     });
   }
+  function selectFamilyFromLink() {
+    if (location.hash === '#three-dimensional') {
+      selectTab(document.getElementById('ood-wings-tab'));
+    }
+  }
+  selectFamilyFromLink();
+  window.addEventListener('hashchange', selectFamilyFromLink);
   const names = {
     prediction: 'Surrogate',
     correction: 'Surrogate + NK',

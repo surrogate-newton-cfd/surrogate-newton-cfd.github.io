@@ -6,9 +6,14 @@
   const context = canvas.getContext('2d', {alpha: false});
   const button = document.getElementById('hero-flow-play');
   const geometries = [...canvas.closest('figure').querySelectorAll('[data-case]')];
+  const stages = document.getElementById('hero-flow-stages');
+  const stageSurrogate = stages?.querySelector('[data-stage="surrogate"]');
+  const stageArrow = stages?.querySelector('.hero-stage-arrow');
+  const stageNk = stages?.querySelector('[data-stage="nk"]');
   const mse = document.getElementById('hero-flow-mse');
   const exponent = mse.querySelector('sup');
   const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
+  const clamp01 = value => Math.max(0, Math.min(1, value));
   let timeline;
   let activeCase = 0;
   let pendingCase = 0;
@@ -55,6 +60,14 @@
     if (lastFrame < 0) canvas.classList.add('has-frame');
     lastFrame = frame;
     showMse(chapter.mse[sample]);
+    if (stageSurrogate && stageArrow && stageNk) {
+      const pSurrogate = reducedMotion.matches && !playbackRequested ? 1 : clamp01(sample / 11);
+      const pArrow = clamp01((sample - 9) / 4);
+      const pNk = clamp01((sample - 11) / 78);
+      stageSurrogate.style.setProperty('--stage-p', pSurrogate.toFixed(3));
+      stageArrow.style.setProperty('--stage-p', pArrow.toFixed(3));
+      stageNk.style.setProperty('--stage-p', pNk.toFixed(3));
+    }
 
     if (index !== activeCase) {
       geometries[activeCase].setAttribute('aria-pressed', 'false');

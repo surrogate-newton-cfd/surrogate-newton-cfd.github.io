@@ -209,7 +209,7 @@ async function initFlowJourney(directory,signal){
  },{once:true});
 }
 
-const citation=`@article{lei2026surrogate_newton,\n  title={Reliable and efficient steady CFD from surrogate predictions through Newton--Krylov correction},\n  author={Lei, Mingcheng and Tang, Weishao and Zhang, Yufei and Chen, Haixin},\n  journal={arXiv preprint arXiv:2608.04400},\n  year={2026}\n}`;
+const citation=$('#bib-text').textContent;
 $('#copy-citation').onclick=async()=>{try{await navigator.clipboard.writeText(citation);$('#citation-label').textContent='Copied';toast('BibTeX copied to clipboard');setTimeout(()=>$('#citation-label').textContent='Copy',2500);}catch{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([citation],{type:'text/plain'}));a.download='surrogate-newton.bib';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);toast('Citation downloaded');}};
 
 /* SuperMimic-style Explore dropdown & FAQ expand-all controller */

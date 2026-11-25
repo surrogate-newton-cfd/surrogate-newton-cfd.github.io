@@ -138,8 +138,8 @@
           <div class="result-heading field-heading"><div><h3 id="field-title">Pressure coefficient fields</h3><p>Each solution is shown at the same scale for the selected field.</p></div></div>
           <div class="field-toolbar">
             <label for="field-channel"><span>Field</span><select id="field-channel"><option value="cp" selected>Pressure coefficient, Cₚ</option><option value="density">Density</option><option value="velocity_x">Velocity X</option><option value="velocity_y">Velocity Y</option><option value="pressure">Pressure ratio, p/p∞</option><option value="sa_nu_tilde">SA working variable</option></select></label>
-            <label for="field-scale-min"><span>Colour minimum</span><input id="field-scale-min" type="number" step="any" placeholder="−2"></label>
-            <label for="field-scale-max"><span>Colour maximum</span><input id="field-scale-max" type="number" step="any" placeholder="1.2"></label>
+            <label id="color-min" for="field-scale-min"><span>Colour minimum</span><input id="field-scale-min" type="number" step="any" placeholder="−2"></label>
+            <label id="color-max" for="field-scale-max"><span>Colour maximum</span><input id="field-scale-max" type="number" step="any" placeholder="1.2"></label>
             <button id="field-scale-auto" class="text-button" type="button">Use standard scale</button>
           </div>
           <div class="field-grid">
@@ -152,8 +152,8 @@
             <div class="error-heading"><div><h4 id="error-title">Signed pressure coefficient error</h4><p id="error-description">Field minus cold-start CFD.</p></div></div>
             <div class="error-toolbar">
               <label id="cp-error-options" for="cp-error-mode"><span>Error display</span><select id="cp-error-mode"><option value="signed">Signed ΔCₚ</option><option value="absolute">Absolute |ΔCₚ|</option></select></label>
-              <label for="error-scale-min"><span>Error minimum</span><input id="error-scale-min" type="number" step="any" placeholder="Auto"></label>
-              <label for="error-scale-max"><span>Error maximum</span><input id="error-scale-max" type="number" step="any" placeholder="Auto"></label>
+              <label id="error-min" for="error-scale-min"><span>Error minimum</span><input id="error-scale-min" type="number" step="any" placeholder="Auto"></label>
+              <label id="error-max" for="error-scale-max"><span>Error maximum</span><input id="error-scale-max" type="number" step="any" placeholder="Auto"></label>
               <button id="error-scale-auto" class="text-button" type="button">Use automatic limits</button>
             </div>
             <div class="error-grid">

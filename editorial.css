@@ -156,17 +156,23 @@ sup.fn a:hover {
   background: #fff;
 }
 
+.hero.hero-opening .hero-project {
+  margin-bottom: 12px;
+  font-size: clamp(21px, 2.55vw, 31px);
+  letter-spacing: -.025em;
+}
+
 .hero.hero-opening .hero-copy h1 {
-  font-size: clamp(33px, 5vw, 67px);
-  line-height: 1.07;
+  font-size: clamp(29px, 4.15vw, 56px);
+  line-height: 1.09;
   letter-spacing: -.03em;
 }
 
 .hero.hero-opening .hero-lede {
   max-width: 720px;
-  margin-top: 20px;
+  margin-top: 18px;
   color: #45454b;
-  font-size: clamp(17px, 1.65vw, 22px);
+  font-size: clamp(16px, 1.55vw, 21px);
   line-height: 1.45;
 }
 
@@ -184,6 +190,43 @@ sup.fn a:hover {
   margin: 0 0 8px;
   font: 600 clamp(13px, 1.1vw, 15px)/1.3 var(--sans);
   text-align: center;
+}
+
+.hero-flow-stages {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  margin: 0 0 9px;
+  font: 600 clamp(13px, 1.1vw, 15px)/1.3 var(--sans);
+  letter-spacing: -.01em;
+}
+
+.hero-stage,
+.hero-stage-arrow {
+  display: inline-block;
+  --stage-idle: #b6b6c0;
+  --stage-p: 0;
+  background-image: linear-gradient(90deg, var(--stage-color) 0% 46%, var(--stage-idle) 54% 100%);
+  background-size: 220% 100%;
+  background-position: calc((1 - var(--stage-p)) * 100%) 0;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.hero-stage[data-stage="surrogate"] {
+  --stage-color: var(--blue);
+}
+
+.hero-stage-arrow {
+  --stage-color: #6e6e78;
+  font-weight: 500;
+}
+
+.hero-stage[data-stage="nk"] {
+  --stage-color: #a65f37;
 }
 
 .hero-field-keys {
