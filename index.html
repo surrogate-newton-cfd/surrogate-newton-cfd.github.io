@@ -6,7 +6,7 @@
   <link rel="canonical" href="https://surrogate-newton-cfd.github.io/">
   <meta name="theme-color" content="#ffffff"><title>Surrogate–Newton</title>
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="style.css?v=plan-a-1">
+  <link rel="stylesheet" href="style.css?v=woff2">
   <link rel="stylesheet" href="highlights_controls83.css?v=playback-93">
   <link rel="stylesheet" href="highlights_layout84.css?v=playback-93">
   <link rel="stylesheet" href="highlights_refine85.css?v=playback-93">
@@ -146,11 +146,11 @@
           </div>
         </div>
         <div class="hero-scene-area">
-          <div class="hero-panel" id="scene-overview" role="tabpanel" aria-labelledby="tab-overview"><video class="hero-video-decoder" aria-hidden="true" id="overview-video" width="1600" height="820" muted playsinline preload="auto" poster="assets/highlights/overview-rectangular-cp005-poster.webp" aria-label="Residual convergence surface across geometric out-of-distribution distance with paired pressure and error fields." aria-describedby="overview-timing"><source src="assets/highlights/overview-rectangular-cp005.mp4" type="video/mp4"></video><canvas id="overview-surface" width="1600" height="820" role="img" aria-label="Residual convergence surface across geometric out-of-distribution distance with paired pressure and error fields." aria-describedby="overview-timing"></canvas><span class="visually-hidden" id="overview-timing"></span></div>
-          <div class="hero-panel" id="scene-airfoils" role="tabpanel" aria-labelledby="tab-airfoils" hidden><video class="hero-video-decoder" aria-hidden="true" id="airfoil-matrix-video" width="1920" height="1080" muted playsinline preload="auto" poster="assets/highlights/airfoils-8mpi-cp005-poster.webp" aria-label="Thirty distinct OOD benchmark geometries with adjacent pressure and error fields converging in under 3 seconds each." aria-describedby="airfoil-matrix-description"><source src="assets/highlights/airfoils-8mpi-cp005.mp4" type="video/mp4"></video><canvas id="airfoil-matrix-surface" width="1920" height="1080" role="img" aria-label="Thirty distinct OOD benchmark geometries with adjacent pressure and error fields converging in under 3 seconds each." aria-describedby="airfoil-matrix-description"></canvas><span class="visually-hidden" id="airfoil-matrix-description"></span><p class="compact-only scene-subset-note">12 of 30 cases shown. Open on a wider screen for all 30.</p></div>
+          <div class="hero-panel" id="scene-overview" role="tabpanel" aria-labelledby="tab-overview"><video class="hero-video-decoder" aria-hidden="true" id="overview-video" width="1600" height="820" muted playsinline preload="none" data-src="assets/highlights/overview-rectangular-cp005.mp4" aria-label="Residual convergence surface across geometric out-of-distribution distance with paired pressure and error fields." aria-describedby="overview-timing"></video><canvas id="overview-surface" width="1600" height="820" role="img" aria-label="Residual convergence surface across geometric out-of-distribution distance with paired pressure and error fields." aria-describedby="overview-timing"></canvas><span class="visually-hidden" id="overview-timing"></span></div>
+          <div class="hero-panel" id="scene-airfoils" role="tabpanel" aria-labelledby="tab-airfoils" hidden><video class="hero-video-decoder" aria-hidden="true" id="airfoil-matrix-video" width="1920" height="1080" muted playsinline preload="none" data-src="assets/highlights/airfoils-8mpi-cp005.mp4" aria-label="Thirty distinct OOD benchmark geometries with adjacent pressure and error fields converging in under 3 seconds each." aria-describedby="airfoil-matrix-description"></video><canvas id="airfoil-matrix-surface" width="1920" height="1080" role="img" aria-label="Thirty distinct OOD benchmark geometries with adjacent pressure and error fields converging in under 3 seconds each." aria-describedby="airfoil-matrix-description"></canvas><span class="visually-hidden" id="airfoil-matrix-description"></span><p class="compact-only scene-subset-note">12 of 30 cases shown. Open on a wider screen for all 30.</p></div>
           <div class="hero-panel" id="scene-wings" role="tabpanel" aria-labelledby="tab-wings" hidden>
             <div class="wing-media">
-              <video class="hero-video-decoder" id="wing-video" width="1600" height="810" muted playsinline preload="auto" poster="assets/highlights/wing-paired-poster.webp" aria-hidden="true"><source src="assets/highlights/wing-paired.mp4" type="video/mp4"></video>
+              <video class="hero-video-decoder" id="wing-video" width="1600" height="810" muted playsinline preload="none" data-src="assets/highlights/wing-paired.mp4" aria-hidden="true"></video>
               <canvas id="wing-canvas" width="1600" height="810" role="img" aria-label="One DLR-F6 semispan on 3,527,680 volume cells: surface pressure coefficient, local Mach sections and pressure-gradient contours evolving through NK correction"></canvas>
               <span id="wing-conditions" hidden><span id="wing-mach-angle"></span> <span class="wing-condition-divider" aria-hidden="true">·</span> <span id="wing-reynolds"></span></span>
               <figure class="wing-case-chart" aria-label="Displayed wing case convergence comparison">
@@ -781,15 +781,15 @@
             <div class="mechanism-pressure-body">
               <div class="mechanism-fields">
                 <figure>
-                  <img src="assets/mechanism-pressure-surrogate.webp?v=matched-cp" width="640" height="382" decoding="async" alt="Pressure coefficient around the airfoil in the surrogate starting field">
+                  <img src="assets/mechanism-pressure-surrogate.webp?v=matched-cp" width="640" height="382" loading="lazy" decoding="async" alt="Pressure coefficient around the airfoil in the surrogate starting field">
                   <figcaption><strong>Surrogate start</strong><span>r₀ = <b data-initial-residual="warm">2.78 × 10⁻³</b></span><span>Field MSE <b data-mse="0">0.014</b></span></figcaption>
                 </figure>
                 <figure>
-                  <img src="assets/mechanism-pressure-pseudo_time.webp?v=matched-cp" width="640" height="382" decoding="async" alt="Pressure coefficient around the airfoil in the residual-matched pseudo-time starting field">
+                  <img src="assets/mechanism-pressure-pseudo_time.webp?v=matched-cp" width="640" height="382" loading="lazy" decoding="async" alt="Pressure coefficient around the airfoil in the residual-matched pseudo-time starting field">
                   <figcaption><strong>Pseudo-time start</strong><span>r₀ = <b data-initial-residual="matched">3.39 × 10⁻³</b></span><span>Field MSE <b data-mse="1">0.169</b></span></figcaption>
                 </figure>
                 <figure>
-                  <img src="assets/mechanism-pressure-reference.webp?v=matched-cp" width="640" height="382" decoding="async" alt="Pressure coefficient around the airfoil in the converged CFD reference field">
+                  <img src="assets/mechanism-pressure-reference.webp?v=matched-cp" width="640" height="382" loading="lazy" decoding="async" alt="Pressure coefficient around the airfoil in the converged CFD reference field">
                   <figcaption><strong>CFD reference</strong></figcaption>
                 </figure>
               </div>
@@ -951,12 +951,11 @@
 
 <script src="field-display.js?v=closer-cases" defer></script>
 <script src="flow-renderer.js?v=closer-cases" defer></script>
-<script src="highlights-draw.js?v=playback-93" defer></script>
-<script src="highlights_playback93.js?v=polish-2" defer></script>
+<script src="highlights_playback93.js?v=near-viewport" defer></script>
 <script src="app.js?v=release-20261125" defer></script>
 <script src="web-demo.js?v=embed-refresh" defer></script>
 <script src="method.js?v=4" defer></script>
-<script src="closer-look.js?v=closer-unlocked" defer></script>
+<script src="closer-look.js?v=near-viewport" defer></script>
 <script src="offline-ood.js?v=fig6c-1085-links" defer></script>
 <script src="hero-flow.js?v=hero-sweep-2" defer></script>
 <script src="mechanism.js?v=polish-1" defer></script>

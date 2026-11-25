@@ -72,11 +72,24 @@ function mountHighlightWingComparison(chart, comparison) {
  };
 }
 
-(async function initHighlights(){
+async function initHighlights(){
  const el=id=>document.getElementById(id),tabs=[...document.querySelectorAll('[data-scene]')],panels=['scene-overview','scene-airfoils','scene-wings'].map(el);
  const motion=matchMedia('(prefers-reduced-motion: reduce)'),overview=el('overview-video'),matrix=el('airfoil-matrix-video'),wingVideo=el('wing-video');
  const clamp=x=>Math.max(0,Math.min(1,x));
- const [airfoils,wing,overviewSource]=await Promise.all(['airfoils-8mpi-cp005','wing-paired','overview-rectangular-cp005'].map(name=>fetch('assets/highlights/'+name+'.json').then(r=>{if(!r.ok)throw Error(name+' unavailable');return r.json();})));
+ const loadVideo = video => new Promise((resolve, reject) => {
+  video.addEventListener('loadeddata', resolve, {once:true});
+  video.addEventListener('error', () => reject(new Error(video.id + ' unavailable')), {once:true});
+  video.preload = 'auto';
+  video.src = video.dataset.src;
+ });
+ const [data] = await Promise.all([
+  fetch('assets/highlights/playback.json').then(response => {
+   if (!response.ok) throw new Error('Playback metadata unavailable');
+   return response.json();
+  }),
+  loadVideo(overview), loadVideo(matrix), loadVideo(wingVideo),
+ ]);
+ const {airfoils, wing, overviewSource} = data;
  const drawWingComparison=mountHighlightWingComparison(el('wing-case-residual'),wing.residual_comparison);
  el('wing-median-speedup').textContent=`${wing.residual_comparison.median_paired_speedup.toFixed(1)}×`;
  const airfoilRanks = [...new Set(airfoils.cases.map(({mpi_ranks}) => mpi_ranks))];
@@ -95,8 +108,6 @@ function mountHighlightWingComparison(chart, comparison) {
  el('overview-median-nk').textContent='1.76 s';
  el('overview-median-cold').textContent='10.10 s';
  el('overview-speedup').textContent='5.8×';
- const videoReady=(video,name)=>video.readyState>=2?Promise.resolve():new Promise((resolve,reject)=>{video.addEventListener('loadeddata',resolve,{once:true});video.addEventListener('error',()=>reject(Error(name+' video unavailable')),{once:true});});
- await Promise.all([videoReady(overview,'Overview'),videoReady(matrix,'Airfoils'),videoReady(wingVideo,'Wings')]);
  // Decode offscreen; paint ordinary page canvases to avoid native video-layer seams.
  const surfaces=new Map([[overview,el('overview-surface')],[matrix,el('airfoil-matrix-surface')],[wingVideo,el('wing-canvas')]].map(([video,canvas])=>[video,{canvas,context:canvas.getContext('2d',{alpha:false}),whiteLift:null,holding:false}]));
  const compactQuery=matchMedia('(max-width: 760px)');
@@ -148,7 +159,7 @@ function mountHighlightWingComparison(chart, comparison) {
   }
   requestAnimationFrame(()=>{paintVideo(video);dirty=true;});
  });
- const pace=overviewSource.montage_playback,durations=[overviewSource.animation.duration,airfoils.animation.duration,wing.animation.duration];
+ const durations=[overviewSource.animation.duration,airfoils.animation.duration,wing.animation.duration];
  // Every fresh page load begins with the overview, including old scene-specific links.
  const initialScene=0;
  const states=durations.map(duration=>({elapsed:motion.matches?duration:0,playing:!motion.matches}));
@@ -206,7 +217,6 @@ function mountHighlightWingComparison(chart, comparison) {
   if(running&&video.paused)video.play().catch(()=>{});else if(!running)video.pause();
   paintVideo(video);
  }
- function bracket(frames,time){let hi=frames.findIndex(f=>f.time>time);if(hi<0)hi=frames.length-1;const lo=Math.max(0,hi-1),a=frames[lo],b=frames[hi];return [lo,hi,clamp((time-a.time)/(b.time-a.time||1))];}
  function render(){
   panels[index].style.opacity='1';updateControls();
   setText(el('highlight-playback-value'),'Playback '+[overviewSource.animation.playback_rate,airfoils.animation.rate,wing.playback_label_multiplier][index]+'×');
@@ -252,4 +262,22 @@ function mountHighlightWingComparison(chart, comparison) {
   requestAnimationFrame(tick);
  }
  requestAnimationFrame(tick);
-})().catch(error=>{console.warn('Highlights:',error);document.getElementById('hero-scene-caption').textContent='Reload to play the highlights.';});
+}
+
+(() => {
+ const stage = document.getElementById('highlight-player');
+ const start = () => initHighlights().catch(error => {
+  console.warn('Highlights:', error);
+  document.getElementById('hero-scene-caption').textContent = 'Reload to play the highlights.';
+ });
+ if (!('IntersectionObserver' in window) || ['#highlights', '#highlight-player'].includes(location.hash)) {
+  start();
+  return;
+ }
+ const observer = new IntersectionObserver(([entry]) => {
+  if (!entry.isIntersecting) return;
+  observer.disconnect();
+  start();
+ }, {rootMargin: '220px 0px'});
+ observer.observe(stage);
+})();

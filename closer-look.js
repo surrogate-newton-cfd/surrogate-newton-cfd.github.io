@@ -85,7 +85,17 @@ function normalizeColdHistory(raw, grids) {
     selectCase(tabs[next]);
     tabs[next].focus();
   });
-  loadAirfoil();
+  // Decode the default replay before the reader reaches this section, not at page load.
+  if (!('IntersectionObserver' in window) || ['#convergence', '#results', '#convergence-player'].includes(location.hash)) {
+    loadAirfoil();
+  } else {
+    const observer = new IntersectionObserver(([entry]) => {
+      if (!entry.isIntersecting) return;
+      observer.disconnect();
+      loadAirfoil();
+    }, {rootMargin: '650px 0px'});
+    observer.observe($('#convergence-player'));
+  }
 })();
 
 async function initWingCase(caseDirectory, orientation, signal) {
