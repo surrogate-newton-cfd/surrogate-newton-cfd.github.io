@@ -9,9 +9,13 @@ function mountHorizontalCarousel(track, onPage) {
   let suppressClick = false;
   let width = track.clientWidth;
 
+  function slideLeft(index) {
+    return slides[index].offsetLeft - slides[0].offsetLeft;
+  }
+
   function nearest(left) {
-    return slides.reduce((best, slide, index) =>
-      Math.abs(left - slide.offsetLeft) < Math.abs(left - slides[best].offsetLeft) ? index : best, 0);
+    return slides.reduce((best, _, index) =>
+      Math.abs(left - slideLeft(index)) < Math.abs(left - slideLeft(best)) ? index : best, 0);
   }
 
   function sync() {
@@ -31,7 +35,7 @@ function mountHorizontalCarousel(track, onPage) {
   function go(index) {
     if (!slides[index]) return;
     const from = track.scrollLeft;
-    const to = slides[index].offsetLeft;
+    const to = slideLeft(index);
     cancelAnimation();
     if (reduced.matches || Math.abs(to - from) < 1) {
       track.scrollTo({left: to, behavior: 'instant'});
@@ -98,10 +102,18 @@ function mountHorizontalCarousel(track, onPage) {
   track.addEventListener('lostpointercapture', endDrag);
   track.addEventListener('pointerleave', () => { if (drag && !drag.moving) drag = null; });
   track.addEventListener('click', event => {
-    if (!suppressClick || !event.detail) return;
-    suppressClick = false;
-    event.preventDefault();
-    event.stopImmediatePropagation();
+    if (!event.detail) return;
+    if (suppressClick) {
+      suppressClick = false;
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      return;
+    }
+    const index = slides.findIndex(slide => {
+      const {left, right} = slide.getBoundingClientRect();
+      return event.clientX >= left && event.clientX < right;
+    });
+    if (index >= 0 && index !== active) go(index);
   }, true);
 
   track.addEventListener('scroll', sync, {passive: true});
@@ -118,7 +130,7 @@ function mountHorizontalCarousel(track, onPage) {
     if (!next || next === width) return;
     width = next;
     if (active >= 0 && !animation && !drag?.moving) {
-      track.scrollTo({left: slides[active].offsetLeft, behavior: 'instant'});
+      track.scrollTo({left: slideLeft(active), behavior: 'instant'});
     }
     sync();
   }).observe(track);

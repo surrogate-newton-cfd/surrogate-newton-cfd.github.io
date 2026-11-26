@@ -2,11 +2,56 @@
 
 .compact-only{display:none}
 
+.highlights-band,
+.design-results {
+  --rail-outset: clamp(22px, 4vw, 54px);
+  --rail-inset: var(--rail-outset);
+  --rail-gap: clamp(10px, 1.4vw, 18px);
+}
+
+.highlight-rail,
+.design-figure-track {
+  margin-inline: calc(-1 * var(--rail-outset));
+  padding-inline: var(--rail-inset);
+  scroll-padding-inline: var(--rail-inset);
+  gap: var(--rail-gap);
+}
+
+.highlights-band .highlight-stage {
+  --highlight-top: 31px;
+  --highlight-title-height: 37px;
+  --highlight-playback-top: calc(var(--highlight-top) + var(--highlight-title-height) + 18px);
+  --highlight-rail-top: calc(var(--highlight-playback-top) + 40px);
+  --highlight-side: 24px;
+  --highlight-content-inset: calc(var(--highlight-side) + var(--rail-inset) - var(--rail-outset));
+  padding: 0;
+  background: transparent;
+  border: 0;
+}
+
+.highlight-stage > .hero-panel-summary {
+  position: absolute;
+  z-index: 1;
+  inset: var(--highlight-top) var(--highlight-content-inset) auto;
+  display: grid;
+  place-content: center;
+  min-height: var(--highlight-title-height);
+  margin: 0 auto;
+  text-wrap: balance;
+  pointer-events: none;
+}
+
 .highlights-band .highlight-stage .highlight-playback-row {
-  position: static;
-  width: max-content;
-  min-height: 36px;
-  margin: 0 0 4px auto;
+  position: absolute;
+  top: var(--highlight-playback-top);
+  right: var(--highlight-content-inset);
+}
+
+.highlight-stage > .highlights-controls {
+  position: absolute;
+  bottom: 24px;
+  inset-inline: var(--highlight-content-inset);
+  width: auto;
 }
 
 .highlight-rail {
@@ -27,9 +72,16 @@
   display: flex;
   flex-direction: column;
   min-width: 0;
+  padding: var(--highlight-rail-top) var(--highlight-side) 85px;
+  border: 1px solid #e4e4ea;
+  border-radius: 28px;
+  background: #fff;
+  overflow: hidden;
   scroll-snap-align: start;
   scroll-snap-stop: always;
 }
+
+#scene-airfoils.highlight-scene { padding-top: var(--highlight-rail-top); }
 
 .highlight-figure {
   display: flex;
@@ -79,8 +131,16 @@
 @media (max-width: 760px){
   .compact-only{display:block}
 
-  .highlights-band .highlight-stage .highlight-playback-row{min-height:23px}
-  .highlight-stage .hero-panel-summary{display:grid;place-content:center;margin-bottom:8px}
+  .highlights-band,.design-results{--rail-outset:12px;--rail-inset:22px;--rail-gap:8px}
+  .highlights-band .highlight-stage{
+    --highlight-top:24px;
+    --highlight-title-height:58px;
+    --highlight-playback-top:calc(var(--highlight-top) + var(--highlight-title-height) + 8px);
+    --highlight-rail-top:calc(var(--highlight-playback-top) + 24px);
+    --highlight-side:10px;
+  }
+  .highlight-scene{padding-bottom:94px;border-radius:20px}
+  .highlight-stage > .highlights-controls{bottom:14px}
   #overview-surface{aspect-ratio:1060 / 1322}
   #airfoil-matrix-surface{aspect-ratio:750 / 1210}
   #wing-canvas{aspect-ratio:1290 / 590}
@@ -93,7 +153,6 @@
     grid-row: 1;
     justify-self: center;
   }
-  #scene-airfoils{padding-top:6px}
   .scene-subset-note{margin:8px 0 0;text-align:center;font-size:13px;line-height:1.4;color:#6e6e73}
 
   .wing-media{aspect-ratio:auto}
@@ -148,11 +207,11 @@
 .design-slide-tabs [role="tab"]{min-height:32px;padding:5px 12px;border-radius:99px;font:500 13px/1.2 var(--sans)}
 .design-seed-buttons button{min-width:34px;padding-inline:8px;font-variant-numeric:tabular-nums}
 
-/* carousel: tabs are the only navigation; no arrows, no peeking neighbour card */
+/* Figure tabs stay above the rail; adjacent cards show through on both sides. */
 .design-nav-arrows{display:none!important}
-.design-figure-track{--card-edge:0px;grid-template-columns:repeat(3,100%)!important}
+.design-figure-track{grid-template-columns:repeat(3,100%);gap:var(--rail-gap)}
 .design-figure-track::after{content:none}
-.design-result-figure{scroll-snap-stop:always}
+.design-result-figure{scroll-snap-stop:always;background:#fff}
 
 /* hover vs tap hints */
 .hint-coarse{display:none}

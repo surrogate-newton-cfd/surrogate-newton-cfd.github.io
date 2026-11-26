@@ -171,7 +171,7 @@ async function initHighlights(){
    elapsed=durations[i];states[i].elapsed=elapsed;states[i].playing=false;changed();
   });
  }
- const captions=['Fast convergence, even out of distribution.','30 OOD airfoils converge in under 3 s.','Scaling to 3.5M-cell 3D wings.'];
+ const captions=['Fast convergence, even out of distribution.','30 OOD airfoils converge in under 3 s.','Scaling to 3.5M-cell 3D wings.'];
  const setText=(node,text)=>{if(node&&node.textContent!==text)node.textContent=text;};
  const names=['Overview','Airfoil','Wing'];
  const play=el('highlight-play'),replay=el('highlight-replay'),scrub=el('highlight-scrub');

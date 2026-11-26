@@ -503,10 +503,6 @@
     previous?.addEventListener('click', () => go(active - 1));
     next?.addEventListener('click', () => go(active + 1));
     tabs.forEach((button, index) => button.addEventListener('click', () => go(index)));
-    track.addEventListener('click', event => {
-      const index = slides.indexOf(event.target.closest('.design-result-figure'));
-      if (index >= 0 && index !== active) go(index);
-    });
   }
 
   function mountTaskBlock(block, taskKey, taskData) {
