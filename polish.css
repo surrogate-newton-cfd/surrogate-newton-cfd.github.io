@@ -17,6 +17,10 @@
   gap: var(--rail-gap);
 }
 
+@media (min-width: 761px) and (max-width: 1100px) {
+  .highlights-band, .design-results { --rail-outset: min(32px, 4vw); }
+}
+
 .highlights-band .highlight-stage {
   --highlight-top: 31px;
   --highlight-title-height: 37px;
@@ -209,6 +213,7 @@
 
 /* Figure tabs stay above the rail; adjacent cards show through on both sides. */
 .design-nav-arrows{display:none!important}
+.design-task-panels > .design-task-block{grid-template-columns:minmax(0,1fr)}
 .design-figure-track{grid-template-columns:repeat(3,100%);gap:var(--rail-gap)}
 .design-figure-track::after{content:none}
 .design-result-figure{scroll-snap-stop:always;background:#fff}
@@ -222,6 +227,11 @@
   .closer-cases button,.ood-family-tabs.design-view-toggle button,.design-task-switcher [role="tab"]{flex:1;min-height:44px;min-width:0;padding-inline:10px}
   .design-view-toggle:not(.ood-family-tabs) button,.design-seed-buttons button,.design-slide-tabs [role="tab"]{min-height:36px}
   .design-seed-buttons button{min-width:40px}
+}
+
+@media (max-width:360px){
+  .design-results .design-seed{display:grid;gap:4px}
+  .design-results .design-seed-buttons button{min-width:34px}
 }
 
 /* ---------- Touch targets ---------- */
