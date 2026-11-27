@@ -30,7 +30,46 @@ function normalizeColdHistory(raw, grids) {
   const tablist = $('.closer-cases');
   const tabs = [...tablist.querySelectorAll('[role="tab"]')];
   const camera = {};
-  function connectPicker(kind,mount) {
+  let wingRequested = false;
+  let wingObserver;
+  let preparedWing;
+
+  function prepareDefaultWing() {
+    if (wingRequested || wingObserver || navigator.connection?.saveData) return;
+    // Give the airfoil replay priority and prepare only the default wing, once this section is visible.
+    wingObserver = new IntersectionObserver(([entry]) => {
+      if (!entry.isIntersecting) return;
+      wingObserver.disconnect();
+      if (wingRequested) return;
+      const directory = $('#closer-wing-case').value;
+      const controller = new AbortController();
+      const replay = fetchWingReplay(directory, controller.signal, 'low').catch(() => null);
+      preparedWing = {directory, controller, replay};
+    });
+    wingObserver.observe($('#convergence-player'));
+  }
+
+  async function takeWingReplay(directory, signal) {
+    wingRequested = true;
+    wingObserver?.disconnect();
+    const prepared = preparedWing;
+    preparedWing = null;
+    if (prepared?.directory !== directory) {
+      prepared?.controller.abort();
+      return fetchWingReplay(directory, signal);
+    }
+    const abort = () => prepared.controller.abort();
+    signal.addEventListener('abort', abort, {once:true});
+    try {
+      const replay = await prepared.replay;
+      signal.throwIfAborted();
+      return replay ?? fetchWingReplay(directory, signal);
+    } finally {
+      signal.removeEventListener('abort', abort);
+    }
+  }
+
+  function connectPicker(kind, mount, onReady) {
     const select = $(`#closer-${kind}-case`);
     const status = $(`#closer-${kind}-status`);
     const stage = select.closest('.convergence-hero');
@@ -48,6 +87,7 @@ function normalizeColdHistory(raw, grids) {
         if (signal.aborted) return;
         status.hidden = true;
         delete stage.dataset.loading;
+        onReady?.();
       }).catch(error => {
         if (signal.aborted) return;
         console.warn('Convergence replay:',error);
@@ -58,8 +98,12 @@ function normalizeColdHistory(raw, grids) {
     select.addEventListener('change',load);
     return load;
   }
-  const loadAirfoil = connectPicker('airfoil', initFlowJourney);
-  const loadWing = connectPicker('wing', (directory,signal) => initWingCase(directory,camera,signal));
+  const loadAirfoil = connectPicker('airfoil', initFlowJourney, prepareDefaultWing);
+  const loadWing = connectPicker('wing', async (directory, signal) => {
+    const replay = await takeWingReplay(directory, signal);
+    signal.throwIfAborted();
+    initWingCase(replay, camera, signal);
+  });
 
   function selectCase(selected) {
     for (const tab of tabs) {
@@ -98,22 +142,35 @@ function normalizeColdHistory(raw, grids) {
   }
 })();
 
-async function initWingCase(caseDirectory, orientation, signal) {
+async function fetchWingReplay(caseDirectory, signal, priority = 'auto') {
   const directory = `assets/${caseDirectory}/`;
-  const responses = await Promise.all(['case.json','sections.json','sections.bin.gz']
-    .map(name => fetch(directory + name + '?v=all-wing-replays',{signal})));
-  if (responses.some(response => !response.ok)) throw Error('Wing data unavailable');
-  const [data, model, payload, {createWingOrbit}] = await Promise.all([
-    responses[0].json(),
-    responses[1].json(),
-    new Response(responses[2].body.pipeThrough(new DecompressionStream('gzip'))).arrayBuffer(),
-    import('./wing-orbit.js?v=wing-replay-smooth'),
+  const options = {signal, priority};
+  function checked(response) {
+    if (!response.ok) throw new Error(`Wing data unavailable (${response.status})`);
+    return response;
+  }
+  const load = name => fetch(directory + name + '?v=all-wing-replays', options).then(checked);
+  async function fields() {
+    let response = await fetch(directory + 'sections-planar-delta.bin.gz', options);
+    const packed = response.status !== 404;
+    if (!packed) response = await load('sections.bin.gz');
+    const stream = checked(response).body.pipeThrough(new DecompressionStream('gzip'));
+    return {payload: await new Response(stream).arrayBuffer(), packed};
+  }
+  const [data, model, {payload, packed}, renderer] = await Promise.all([
+    load('case.json').then(response => response.json()),
+    load('sections.json').then(response => response.json()),
+    fields(),
+    import('./wing-orbit.js?v=packed-replay'),
   ]);
-  signal.throwIfAborted();
+  return {data, model, payload, packed, renderer};
+}
 
+function initWingCase({data, model, payload, packed, renderer}, orientation, signal) {
+  if (packed) renderer.unpackWingFields(payload, model);
   const panel = $('#closer-wing');
   const viewPort = $('.closer-wing-view');
-  const view = createWingOrbit($('#closer-wing-canvas'), $('#closer-wing-reset-view'), payload, model, FIELD_DISPLAY.cp.stops, orientation, signal);
+  const view = renderer.createWingOrbit($('#closer-wing-canvas'), $('#closer-wing-reset-view'), payload, model, FIELD_DISPLAY.cp.stops, orientation, signal);
   const {mach, alpha_degrees, reynolds} = data.conditions;
   $('#closer-wing-conditions').textContent = formatCaseConditions(mach, alpha_degrees, reynolds);
   $('#closer-wing-mesh').textContent = `${(data.mesh_cells / 1e6).toFixed(2)}M cells · ${data.mpi_ranks} MPI ranks`;

@@ -1,6 +1,28 @@
 import * as THREE from './assets/vendor/three/three.module.min.js';
 import { OrbitControls } from './assets/vendor/three/OrbitControls.js';
 
+export function unpackWingFields(payload, model) {
+  const {offset, length, shape} = model.buffers.sectionFields;
+  const [, sections, height, width] = shape;
+  const pixels = width * height;
+  const tileBytes = pixels * 4;
+  const frameBytes = sections * tileBytes;
+  const rgba = new Uint8Array(payload, offset, length);
+  const encoded = new Uint8Array(tileBytes);
+  const zero = new Uint8Array(tileBytes);
+  // Each section stores four channel planes, delta-coded against the previous frame.
+  for (let tile = 0; tile < rgba.length; tile += tileBytes) {
+    encoded.set(rgba.subarray(tile, tile + tileBytes));
+    const previous = tile < frameBytes ? zero : rgba.subarray(tile - frameBytes, tile - frameBytes + tileBytes);
+    for (let i = 0, pixel = 0; i < pixels; i++, pixel += 4) {
+      rgba[tile + pixel] = encoded[i] + previous[pixel];
+      rgba[tile + pixel + 1] = encoded[pixels + i] + previous[pixel + 1];
+      rgba[tile + pixel + 2] = encoded[2 * pixels + i] + previous[pixel + 2];
+      rgba[tile + pixel + 3] = encoded[3 * pixels + i] + previous[pixel + 3];
+    }
+  }
+}
+
 export function createWingOrbit(canvas, reset, payload, model, pressureStops, orientation, signal) {
   const bufferView = (name, Type = Float32Array) => {
     const {offset, length} = model.buffers[name];
